@@ -9,9 +9,12 @@ import {setGL} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 import RoadSystem from './RoadSystem';
 import Plane from './geometry/Plane';
+import Cube from './geometry/Cube';
+import TriangularPrism from './geometry/TriangularPrism';
 import Mesh from './geometry/Mesh';
 import {readTextFile} from './globals';
 import BuildingSystem from './BuildingSystem';
+import Building from './Building';
 
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
@@ -25,7 +28,7 @@ const controls = {
 };
 
 let square: Square;
-let building : Square;
+let building : Cube;
 let plane: Plane = new Plane(vec3.fromValues(0,0,0), vec2.fromValues(8,8), 20);
 let screenQuad: ScreenQuad = new ScreenQuad();
 let time: number = 0.0;
@@ -37,11 +40,11 @@ let mesh : Mesh;
 
 function loadScene() {
   square = new Square();
-  building = new Square();
+  building = new Cube(vec3.fromValues(0,0,0));
   building.create();
   square.create();
-  mesh = new Mesh(obj0, vec3.fromValues(0,0,0));
-  mesh.create();
+  // mesh = new Mesh(obj0, vec3.fromValues(0,0,0));
+  // mesh.create();
 
   // Set up instanced rendering data arrays here.
   // This example creates a set of positional
@@ -50,9 +53,11 @@ function loadScene() {
   // one square is actually passed to the GPU
   system.setMaxLength(controls.Road_Density);
   let data = system.runSystem();
-  buildsystem = new BuildingSystem(1.0, system);
+  buildsystem = new BuildingSystem(10.0, system, window.innerWidth, window.innerHeight);
 
-  // let poses = buildsystem.placeBuildings();
+  buildsystem.placeBuildings();
+
+  let buildings : Building[] = buildsystem.buildings;
 
   let offsetsArray = [];
   let colorsArray = [];
@@ -61,52 +66,62 @@ function loadScene() {
   let r3Array = [];
   let scaleArray = [];
 
-  // let offsetsArrayB = [];
-  // let colorsArrayB = [];
-  // let r1ArrayB = [];
-  // let r2ArrayB = [];
-  // let r3ArrayB = [];
-  // let scaleArrayB = [];
+  let offsetsArrayB = [];
+  let colorsArrayB = [];
+  let r1ArrayB = [];
+  let r2ArrayB = [];
+  let r3ArrayB = [];
+  let scaleArrayB = [];
   
    let n: number = data[0].length;
 
-  // let n2: number = poses.length;
+  let numInstances: number = 0;
 
-  // for(let i = 0; i < n; i++) {
-  //     offsetsArrayB.push(poses[i][0]);
-  //     offsetsArrayB.push(0);
-  //     offsetsArrayB.push(poses[i][1]);
+  //console.log("n2: " + n2);
 
-  //     r1ArrayB.push(1);
-  //     r1ArrayB.push(0);
-  //     r1ArrayB.push(0);
+  for(let i = 0; i < buildings.length; i++) {
+    for (let j = 0; j < buildings[i].positions.length; j++) {
+      offsetsArrayB.push(1.0 * ((buildings[i].positions[j][0] * 2.0 / buildsystem.gridWidth) - 1.0));
+      offsetsArrayB.push(0.01 * buildings[i].positions[j][1]);
+      offsetsArrayB.push(1.0 * ((buildings[i].positions[j][2] * 2.0 / buildsystem.gridHeight) - 1.0));
 
-  //     r2ArrayB.push(0);
-  //     r2ArrayB.push(1);
-  //     r2ArrayB.push(0);
+      numInstances +=1;
 
-  //     r3ArrayB.push(0);
-  //     r3ArrayB.push(0);
-  //     r3ArrayB.push(1);
+      //console.log(1.0 * ((buildings[i].positions[j][1] * 2.0 / buildsystem.gridHeight)));
+      //console.log("Pos: " + ((poses[i][0] * 2.0 / buildsystem.gridWidth) - 1.0) + ", " + ((poses[i][1] * 2.0 / buildsystem.gridWidth) - 1.0));
 
-  //     scaleArrayB.push(1);
-  //     scaleArrayB.push(1);
-  //     scaleArrayB.push(1);
+      r1ArrayB.push(1.0);
+      r1ArrayB.push(0.0);
+      r1ArrayB.push(0.0);
 
-  //     colorsArrayB.push(1.0);
-  //     colorsArrayB.push(1.0);
-  //     colorsArrayB.push(0.0);
-  //     colorsArrayB.push(1.0);
-  // }
+      r2ArrayB.push(0.0);
+      r2ArrayB.push(1.0);
+      r2ArrayB.push(0.0);
 
-  // let offsetsB: Float32Array = new Float32Array(offsetsArrayB);
-  // let colorsB: Float32Array = new Float32Array(colorsArrayB);
-  // let r1sB: Float32Array = new Float32Array(r1ArrayB);
-  // let r2sB: Float32Array = new Float32Array(r2ArrayB);
-  // let r3sB: Float32Array = new Float32Array(r3ArrayB);
-  // let scalesB: Float32Array = new Float32Array(scaleArrayB);
-  // square.setInstanceVBOs(offsetsB, colorsB, r1sB, r2sB, r3sB, scalesB);
-  // square.setNumInstances(n2); // grid of "particles"
+      r3ArrayB.push(0.0);
+      r3ArrayB.push(0.0);
+      r3ArrayB.push(1.0);
+
+      scaleArrayB.push(0.01);
+      scaleArrayB.push(0.01);
+      scaleArrayB.push(0.01);
+
+      colorsArrayB.push(1.0);
+      colorsArrayB.push(1.0);
+      colorsArrayB.push(0.0);
+      colorsArrayB.push(1.0);
+    }
+      
+    }
+
+  let offsetsB: Float32Array = new Float32Array(offsetsArrayB);
+  let colorsB: Float32Array = new Float32Array(colorsArrayB);
+  let r1sB: Float32Array = new Float32Array(r1ArrayB);
+  let r2sB: Float32Array = new Float32Array(r2ArrayB);
+  let r3sB: Float32Array = new Float32Array(r3ArrayB);
+  let scalesB: Float32Array = new Float32Array(scaleArrayB);
+  building.setInstanceVBOs(offsetsB, colorsB, r1sB, r2sB, r3sB, scalesB);
+  building.setNumInstances(numInstances); // grid of "particles"
   
   for(let i = 0; i < n; i++) {
     var pos = vec3.create();
@@ -121,7 +136,7 @@ function loadScene() {
       
       offsetsArray.push(position[0]);
       offsetsArray.push(position[1]);
-      offsetsArray.push(position[2]);
+      offsetsArray.push(1.0);
 
       r1Array.push(r1[0]);
       r1Array.push(r1[1]);
@@ -137,7 +152,7 @@ function loadScene() {
 
       scaleArray.push(scale[0]);
       scaleArray.push(scale[1]);
-      scaleArray.push(scale[2]);
+      scaleArray.push(1.0);
 
       if (i == 0) {
         colorsArray.push(1.0);
@@ -285,6 +300,11 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/instanced-frag.glsl')),
   ]);
 
+  const buildingsShader = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/buildings-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/instanced-frag.glsl')),
+  ]);
+
   const flat = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require('./shaders/flat-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/flat-frag.glsl')),
@@ -326,6 +346,7 @@ function main() {
     camera.update();
     stats.begin();
     instancedShader.setTime(time);
+    buildingsShader.setTime(time);
     flat.setTime(time++);
     flat.setState(vec4.fromValues(controls.Height_Map,controls.Density_Map,(controls.Height_Map + controls.Density_Map) - 1.0, controls.Land_Water_Mode));
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
@@ -333,6 +354,9 @@ function main() {
     renderer.render(camera, flat, [plane]);
     renderer.render(camera, instancedShader, [
       square,
+    ]);
+    renderer.render(camera, buildingsShader, [
+      building,
     ]);
     stats.end();
 

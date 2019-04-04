@@ -25,17 +25,6 @@ void main()
     fs_Col = vs_Col;
     fs_Pos = vs_Pos;
 
-    mat3 translate = mat3(vec3(1.0, 0.0, 0.0),
-                          vec3(0.0, 1.0, 0.0),
-                          vec3(vs_Translate.x, vs_Translate.y, 1.0));
-    
-    mat3 rotate = (mat3(vs_R1,
-                  vs_R2,
-                  vs_R3));
-    mat3 scale = mat3(vec3(vs_Scale.x, 0.0, 0.0),
-                            vec3(0.0, vs_Scale.y, 0.0),
-                            vec3(0.0, 0.0, 1.0));
-
-    vec3 pos = translate * rotate * scale * vec3(vs_Pos.xy, 1.0);
-    gl_Position = u_ViewProj * vec4(vec3(4.0 * pos.x, 4.0 * (pos.z - 0.97), 4.0 * pos.y), 1.0);
+    vec3 pos = 0.01 * vs_Pos.xyz + vs_Translate;
+    gl_Position = u_ViewProj * vec4(4.0 * pos.x, 4.0* (pos.y + 0.02), 4.0 * pos.z, 1.0);
 }

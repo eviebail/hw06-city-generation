@@ -33,7 +33,7 @@ export default class RoadSystem {
     buildRasterizedGrid(width : number) : number[] {
         //x + this.width * y
         //length is heightDensityData
-        let grid = new Array<number>(this.height * this.width);
+        var grid = new Array<number>(this.height * this.width);
         for (let i = 0; i < this.width; i++) {
             for (let j = 0; j < this.height; j++) {
                 var green = this.heightDensityData[(i + this.width * j)*4.0 + 1.0];
@@ -49,12 +49,32 @@ export default class RoadSystem {
         //now rasterize the edges
         for (let i = 0; i < this.edges.length; i++) {
             let edge = this.edges[i];
-            let maxY = Math.max(edge.v2[1], edge.v1[1]);
-            let minY = Math.min(edge.v2[1], edge.v1[1]);
-            let xMin = Math.min(edge.v2[0], edge.v1[0]);
-            let xMax = Math.max(edge.v2[0], edge.v1[0]);
+            
+            let v1 = vec2.fromValues(edge.v1[0], edge.v1[1]);
+            let endpt = vec2.fromValues(0,0);
+            let o = vec2.fromValues(edge.direction[0], edge.direction[1]);
+            vec2.mul(o,o,vec2.fromValues(length, length));
+            vec2.add(endpt, v1, o);
+            let v2 = vec2.fromValues(endpt[0], endpt[1]);
+
+            let x1 = (v1[0] + 1.0) * (this.width) / 2.0; // (2.0 / this.width) - 1.0
+            let y1 = (v1[1] + 1.0) * (this.height) / 2.0;
+            let x2 = (v2[0] + 1.0) * (this.width) / 2.0;
+            let y2 = (v2[1] + 1.0) * (this.height) / 2.0;
+            
+            let maxY = Math.max(y2, y1);
+            let minY = Math.min(y2, y1);
+            let xMin = Math.min(x1,x2);
+            let xMax = Math.max(x1,x2);
+
+            // maxY = (maxY + 1.0) * this.height * 0.5;
+            // minY = (minY + 1.0) * this.height * 0.5;
+            // xMax = (xMax + 1.0) * this.width * 0.5;
+            // xMin = (xMin + 1.0) * this.width * 0.5;
+
             let m = (maxY - minY) / (xMax - xMin);
 
+            //console.log(grid.length);
             //check if the road is horizontal!
             if (minY == maxY) {
                 for (let x = Math.floor(xMin); x <= Math.ceil(xMax); x++) {
@@ -68,13 +88,17 @@ export default class RoadSystem {
                         grid[x + this.width * y] = 0;
                     }
                 }
-            } else { 
+            } else {
                 for (let y = Math.floor(minY); y <= Math.ceil(maxY); y++) {
+
                     let x1 = edge.v1[0];
+                    x1 = (x1 + 1.0) * ((this.width) / 2.0);
                     let y1 = edge.v1[1];
-                    let X = ((y - y1) / m) + x1;
-                    for (let x = Math.floor(X - width); x <= Math.floor(X + width); x++) {
-                        grid[x + this.width * y] = 0;
+                    y1 = (y1 + 1.0) * ((this.height) / 2.0);
+                    let X = ((minY - y1) / m) + x1;
+                    
+                    for (let x = Math.floor(X - width); x <= Math.ceil(X + width); x++) {
+                        grid[x + this.width*y] = 0;
                     }
                 }
             }
