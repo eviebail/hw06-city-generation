@@ -19,12 +19,14 @@ in vec3 vs_Scale;
 
 out vec4 fs_Col;
 out vec4 fs_Pos;
+out vec4 fs_Nor;
 
 void main()
 {
     fs_Col = vs_Col;
     fs_Pos = vs_Pos;
+    fs_Nor = vs_Nor;
 
     vec3 pos = 0.01 * vs_Pos.xyz + vs_Translate;
-    gl_Position = u_ViewProj * vec4(4.0 * pos.x, 4.0* (pos.y + 0.02), 4.0 * pos.z, 1.0);
+    gl_Position = u_ViewProj * vec4(4.0 * pos.x, 4.0* (pos.y + 0.03), 4.0 * pos.z, 1.0);
 }

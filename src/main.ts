@@ -28,20 +28,27 @@ const controls = {
 };
 
 let square: Square;
-let building : Cube;
+let cube : Cube;
+let hexagon : Mesh;
+let cylinder : Mesh;
 let plane: Plane = new Plane(vec3.fromValues(0,0,0), vec2.fromValues(8,8), 20);
 let screenQuad: ScreenQuad = new ScreenQuad();
 let time: number = 0.0;
 let system: RoadSystem;
 let buildsystem: BuildingSystem;
-let obj0: string = readTextFile('./src/resources/road.obj');
+let obj0: string = readTextFile('./src/resources/hexagon.obj');
+let obj1: string = readTextFile('./src/resources/cylinder.obj');
 let mesh : Mesh;
 
 
 function loadScene() {
   square = new Square();
-  building = new Cube(vec3.fromValues(0,0,0));
-  building.create();
+  hexagon = new Mesh(obj0,vec3.fromValues(0.0,0.0,0.0));
+  hexagon.create();
+  cylinder = new Mesh(obj1,vec3.fromValues(0.0,0.0,0.0));
+  cylinder.create();
+  cube = new Cube(vec3.fromValues(0,0,0));
+  cube.create();
   square.create();
   // mesh = new Mesh(obj0, vec3.fromValues(0,0,0));
   // mesh.create();
@@ -75,41 +82,44 @@ function loadScene() {
   
    let n: number = data[0].length;
 
-  let numInstances: number = 0;
+  let numInstancesH: number = 0;
 
   //console.log("n2: " + n2);
 
   for(let i = 0; i < buildings.length; i++) {
     for (let j = 0; j < buildings[i].positions.length; j++) {
-      offsetsArrayB.push(1.0 * ((buildings[i].positions[j][0] * 2.0 / buildsystem.gridWidth) - 1.0));
-      offsetsArrayB.push(0.01 * buildings[i].positions[j][1]);
-      offsetsArrayB.push(1.0 * ((buildings[i].positions[j][2] * 2.0 / buildsystem.gridHeight) - 1.0));
+      if (buildings[i].positions[j][3] == 1.0) {
+        offsetsArrayB.push(1.0 * ((buildings[i].positions[j][0] * 2.0 / buildsystem.gridWidth) - 1.0));
+        offsetsArrayB.push(0.02 * buildings[i].positions[j][1]);
+        offsetsArrayB.push(1.0 * ((buildings[i].positions[j][2] * 2.0 / buildsystem.gridHeight) - 1.0));
 
-      numInstances +=1;
+        numInstancesH +=1;
 
-      //console.log(1.0 * ((buildings[i].positions[j][1] * 2.0 / buildsystem.gridHeight)));
-      //console.log("Pos: " + ((poses[i][0] * 2.0 / buildsystem.gridWidth) - 1.0) + ", " + ((poses[i][1] * 2.0 / buildsystem.gridWidth) - 1.0));
+        //console.log(1.0 * ((buildings[i].positions[j][1] * 2.0 / buildsystem.gridHeight)));
+        //console.log("Pos: " + ((poses[i][0] * 2.0 / buildsystem.gridWidth) - 1.0) + ", " + ((poses[i][1] * 2.0 / buildsystem.gridWidth) - 1.0));
 
-      r1ArrayB.push(1.0);
-      r1ArrayB.push(0.0);
-      r1ArrayB.push(0.0);
+        r1ArrayB.push(1.0);
+        r1ArrayB.push(0.0);
+        r1ArrayB.push(0.0);
 
-      r2ArrayB.push(0.0);
-      r2ArrayB.push(1.0);
-      r2ArrayB.push(0.0);
+        r2ArrayB.push(0.0);
+        r2ArrayB.push(1.0);
+        r2ArrayB.push(0.0);
 
-      r3ArrayB.push(0.0);
-      r3ArrayB.push(0.0);
-      r3ArrayB.push(1.0);
+        r3ArrayB.push(0.0);
+        r3ArrayB.push(0.0);
+        r3ArrayB.push(1.0);
 
-      scaleArrayB.push(0.01);
-      scaleArrayB.push(0.01);
-      scaleArrayB.push(0.01);
+        scaleArrayB.push(0.01);
+        scaleArrayB.push(0.01);
+        scaleArrayB.push(0.01);
 
-      colorsArrayB.push(1.0);
-      colorsArrayB.push(1.0);
-      colorsArrayB.push(0.0);
-      colorsArrayB.push(1.0);
+        colorsArrayB.push(1.0);
+        colorsArrayB.push(1.0);
+        colorsArrayB.push(0.0);
+        colorsArrayB.push(1.0);
+      }
+      
     }
       
     }
@@ -120,8 +130,124 @@ function loadScene() {
   let r2sB: Float32Array = new Float32Array(r2ArrayB);
   let r3sB: Float32Array = new Float32Array(r3ArrayB);
   let scalesB: Float32Array = new Float32Array(scaleArrayB);
-  building.setInstanceVBOs(offsetsB, colorsB, r1sB, r2sB, r3sB, scalesB);
-  building.setNumInstances(numInstances); // grid of "particles"
+  hexagon.setInstanceVBOs(offsetsB, colorsB, r1sB, r2sB, r3sB, scalesB);
+  hexagon.setNumInstances(numInstancesH); // grid of "particles"
+
+  let numInstancesC: number = 0;
+
+  //console.log("n2: " + n2);
+
+  offsetsArrayB = [];
+  colorsArrayB = [];
+  r1ArrayB = [];
+  r2ArrayB = [];
+  r3ArrayB = [];
+  scaleArrayB = [];
+
+  for(let i = 0; i < buildings.length; i++) {
+    for (let j = 0; j < buildings[i].positions.length; j++) {
+      if (buildings[i].positions[j][3] == 2.0) {
+        offsetsArrayB.push(1.0 * ((buildings[i].positions[j][0] * 2.0 / buildsystem.gridWidth) - 1.0));
+        offsetsArrayB.push(0.02 * buildings[i].positions[j][1]);
+        offsetsArrayB.push(1.0 * ((buildings[i].positions[j][2] * 2.0 / buildsystem.gridHeight) - 1.0));
+
+        numInstancesC +=1;
+
+        //console.log(1.0 * ((buildings[i].positions[j][1] * 2.0 / buildsystem.gridHeight)));
+        //console.log("Pos: " + ((poses[i][0] * 2.0 / buildsystem.gridWidth) - 1.0) + ", " + ((poses[i][1] * 2.0 / buildsystem.gridWidth) - 1.0));
+
+        r1ArrayB.push(1.0);
+        r1ArrayB.push(0.0);
+        r1ArrayB.push(0.0);
+
+        r2ArrayB.push(0.0);
+        r2ArrayB.push(1.0);
+        r2ArrayB.push(0.0);
+
+        r3ArrayB.push(0.0);
+        r3ArrayB.push(0.0);
+        r3ArrayB.push(1.0);
+
+        scaleArrayB.push(0.01);
+        scaleArrayB.push(0.01);
+        scaleArrayB.push(0.01);
+
+        colorsArrayB.push(1.0);
+        colorsArrayB.push(1.0);
+        colorsArrayB.push(0.0);
+        colorsArrayB.push(1.0);
+      }
+      
+    }
+      
+    }
+
+  offsetsB = new Float32Array(offsetsArrayB);
+  colorsB = new Float32Array(colorsArrayB);
+  r1sB = new Float32Array(r1ArrayB);
+  r2sB = new Float32Array(r2ArrayB);
+  r3sB = new Float32Array(r3ArrayB);
+  scalesB = new Float32Array(scaleArrayB);
+  cylinder.setInstanceVBOs(offsetsB, colorsB, r1sB, r2sB, r3sB, scalesB);
+  cylinder.setNumInstances(numInstancesC); // grid of "particles"
+
+  let numInstancesCu: number = 0;
+
+  //console.log("n2: " + n2);
+
+  offsetsArrayB = [];
+  colorsArrayB = [];
+  r1ArrayB = [];
+  r2ArrayB = [];
+  r3ArrayB = [];
+  scaleArrayB = [];
+
+  for(let i = 0; i < buildings.length; i++) {
+    for (let j = 0; j < buildings[i].positions.length; j++) {
+      if (buildings[i].positions[j][3] == 0.0) {
+        offsetsArrayB.push(1.0 * ((buildings[i].positions[j][0] * 2.0 / buildsystem.gridWidth) - 1.0));
+        offsetsArrayB.push(0.02 * buildings[i].positions[j][1]);
+        offsetsArrayB.push(1.0 * ((buildings[i].positions[j][2] * 2.0 / buildsystem.gridHeight) - 1.0));
+
+        numInstancesCu +=1;
+
+        //console.log(1.0 * ((buildings[i].positions[j][1] * 2.0 / buildsystem.gridHeight)));
+        //console.log("Pos: " + ((poses[i][0] * 2.0 / buildsystem.gridWidth) - 1.0) + ", " + ((poses[i][1] * 2.0 / buildsystem.gridWidth) - 1.0));
+
+        r1ArrayB.push(1.0);
+        r1ArrayB.push(0.0);
+        r1ArrayB.push(0.0);
+
+        r2ArrayB.push(0.0);
+        r2ArrayB.push(1.0);
+        r2ArrayB.push(0.0);
+
+        r3ArrayB.push(0.0);
+        r3ArrayB.push(0.0);
+        r3ArrayB.push(1.0);
+
+        scaleArrayB.push(0.01);
+        scaleArrayB.push(0.01);
+        scaleArrayB.push(0.01);
+
+        colorsArrayB.push(1.0);
+        colorsArrayB.push(1.0);
+        colorsArrayB.push(0.0);
+        colorsArrayB.push(1.0);
+      }
+      
+    }
+      
+    }
+
+  offsetsB = new Float32Array(offsetsArrayB);
+  colorsB = new Float32Array(colorsArrayB);
+  r1sB = new Float32Array(r1ArrayB);
+  r2sB = new Float32Array(r2ArrayB);
+  r3sB = new Float32Array(r3ArrayB);
+  scalesB = new Float32Array(scaleArrayB);
+  cube.setInstanceVBOs(offsetsB, colorsB, r1sB, r2sB, r3sB, scalesB);
+  cube.setNumInstances(numInstancesCu); // grid of "particles"
   
   for(let i = 0; i < n; i++) {
     var pos = vec3.create();
@@ -243,7 +369,7 @@ function loadTexture(camera : Camera, textureBuffer : ShaderProgram, renderer : 
 
 function load(camera : Camera, textureBuffer : ShaderProgram, renderer : OpenGLRenderer,
   gl : WebGL2RenderingContext, m_renderedTexture : WebGLTexture, m_depthRenderBuffer : WebGLRenderbuffer,
-  m_frameBuffer : WebGLRenderbuffer) {
+  m_frameBuffer : WebGLRenderbuffer, postProcessPass :WebGLRenderbuffer) {
   loadTexture(camera, textureBuffer, renderer, gl, m_renderedTexture, m_depthRenderBuffer, m_frameBuffer);
   loadScene();
       // Tell OpenGL to render to the viewport's frame buffer
@@ -302,7 +428,7 @@ function main() {
 
   const buildingsShader = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require('./shaders/buildings-vert.glsl')),
-    new Shader(gl.FRAGMENT_SHADER, require('./shaders/instanced-frag.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/buildings-frag.glsl')),
   ]);
 
   const flat = new ShaderProgram([
@@ -315,11 +441,17 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/texture-frag.glsl')),
   ]);
 
+  const skyShader = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/background-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/background-frag.glsl')),
+  ]);
+
   var m_renderedTexture = gl.createTexture();
   var m_depthRenderBuffer = gl.createRenderbuffer();
   var m_frameBuffer = gl.createFramebuffer();
+  var postProcessPass = gl.createFramebuffer();
 
-  load(camera, textureBuffer, renderer, gl, m_renderedTexture, m_depthRenderBuffer, m_frameBuffer);
+  load(camera, textureBuffer, renderer, gl, m_renderedTexture, m_depthRenderBuffer, m_frameBuffer, postProcessPass);
 
   // This function will be called every frame
   let prevPop = controls.Population_Density;
@@ -331,33 +463,38 @@ function main() {
       prevPop = controls.Population_Density;
       let state = vec4.fromValues(controls.Population_Density, controls.Water_Level, 0, 0);
       textureBuffer.setState(state);
-      load(camera, textureBuffer, renderer, gl, m_renderedTexture, m_depthRenderBuffer, m_frameBuffer);
+      load(camera, textureBuffer, renderer, gl, m_renderedTexture, m_depthRenderBuffer, m_frameBuffer, postProcessPass);
     }
     if (controls.Road_Density - prevRoad != 0.0) {
       prevRoad = controls.Road_Density;
-      load(camera, textureBuffer, renderer, gl, m_renderedTexture, m_depthRenderBuffer, m_frameBuffer);
+      load(camera, textureBuffer, renderer, gl, m_renderedTexture, m_depthRenderBuffer, m_frameBuffer, postProcessPass);
     }
     if (controls.Water_Level - prevWater != 0.0) {
       prevWater = controls.Water_Level;
       let state = vec4.fromValues(controls.Population_Density, controls.Water_Level, 0, 0);
       textureBuffer.setState(state);
-      load(camera, textureBuffer, renderer, gl, m_renderedTexture, m_depthRenderBuffer, m_frameBuffer);
+      load(camera, textureBuffer, renderer, gl, m_renderedTexture, m_depthRenderBuffer, m_frameBuffer, postProcessPass);
     }
     camera.update();
     stats.begin();
     instancedShader.setTime(time);
     buildingsShader.setTime(time);
+    skyShader.setTime(time);
     flat.setTime(time++);
     flat.setState(vec4.fromValues(controls.Height_Map,controls.Density_Map,(controls.Height_Map + controls.Density_Map) - 1.0, controls.Land_Water_Mode));
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
 
     renderer.render(camera, flat, [plane]);
+    renderer.render(camera, skyShader, [screenQuad]);
     renderer.render(camera, instancedShader, [
       square,
     ]);
     renderer.render(camera, buildingsShader, [
-      building,
+      cube, hexagon, cylinder,
     ]);
+
+
+
     stats.end();
 
     // Tell the browser to call `tick` again whenever it renders a new frame

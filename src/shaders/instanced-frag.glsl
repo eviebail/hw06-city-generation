@@ -9,5 +9,5 @@ out vec4 out_Col;
 void main()
 {
     //float dist = 1.0 - (length(fs_Pos.xyz) * 2.0);
-    out_Col = fs_Col;
+    out_Col = vec4(252.0 * 0.9 / 255.0, 168.0 * 0.9 / 255.0, 0.0 * 0.9 / 255.0, 1.0);//fs_Col;
 }

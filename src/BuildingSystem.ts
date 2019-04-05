@@ -34,7 +34,7 @@ export default class BuildingSystem {
         //     }
         // }
 
-        let numBuildings = 1000;
+        let numBuildings = 500;
         for (let i = 0; i < numBuildings; i++) {
             //generate a valid random pos
             //get population density from road system. /255
@@ -48,7 +48,7 @@ export default class BuildingSystem {
                 console.log(density);
                 //console.log("X: " + posX + ", " + posY);
                 if (Math.random() < Math.pow(density, 4.0) && this.grid[posX + this.gridWidth * posY] == 1) {
-                    this.buildings.push(new Building(density * 4.0, vec2.fromValues(posX,posY)));
+                    this.buildings.push(new Building(Math.floor(Math.pow(density, 2.0) * 4.0), vec2.fromValues(posX,posY)));
                     //this.positions.push(vec2.fromValues(posX,posY));
                 }
         }
