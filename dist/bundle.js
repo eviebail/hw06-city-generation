@@ -6074,8 +6074,10 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__rendering_gl_ShaderProgram__ = __webpack_require__(68);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__RoadSystem__ = __webpack_require__(69);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__geometry_Plane__ = __webpack_require__(73);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__geometry_Mesh__ = __webpack_require__(74);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__BuildingSystem__ = __webpack_require__(76);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__geometry_Cube__ = __webpack_require__(74);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__geometry_Mesh__ = __webpack_require__(75);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__BuildingSystem__ = __webpack_require__(77);
+
 
 
 
@@ -6101,21 +6103,28 @@ const controls = {
     Water_Level: 1
 };
 let square;
-let building;
+let cube;
+let hexagon;
+let cylinder;
 let plane = new __WEBPACK_IMPORTED_MODULE_10__geometry_Plane__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["e" /* vec3 */].fromValues(0, 0, 0), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec2 */].fromValues(8, 8), 20);
 let screenQuad = new __WEBPACK_IMPORTED_MODULE_4__geometry_ScreenQuad__["a" /* default */]();
 let time = 0.0;
 let system;
 let buildsystem;
-let obj0 = Object(__WEBPACK_IMPORTED_MODULE_7__globals__["b" /* readTextFile */])('./src/resources/road.obj');
+let obj0 = Object(__WEBPACK_IMPORTED_MODULE_7__globals__["b" /* readTextFile */])('./src/resources/hexagon.obj');
+let obj1 = Object(__WEBPACK_IMPORTED_MODULE_7__globals__["b" /* readTextFile */])('./src/resources/cylinder.obj');
 let mesh;
 function loadScene() {
     square = new __WEBPACK_IMPORTED_MODULE_3__geometry_Square__["a" /* default */]();
-    building = new __WEBPACK_IMPORTED_MODULE_3__geometry_Square__["a" /* default */]();
-    building.create();
+    hexagon = new __WEBPACK_IMPORTED_MODULE_12__geometry_Mesh__["a" /* default */](obj0, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["e" /* vec3 */].fromValues(0.0, 0.0, 0.0));
+    hexagon.create();
+    cylinder = new __WEBPACK_IMPORTED_MODULE_12__geometry_Mesh__["a" /* default */](obj1, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["e" /* vec3 */].fromValues(0.0, 0.0, 0.0));
+    cylinder.create();
+    cube = new __WEBPACK_IMPORTED_MODULE_11__geometry_Cube__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["e" /* vec3 */].fromValues(0, 0, 0));
+    cube.create();
     square.create();
-    mesh = new __WEBPACK_IMPORTED_MODULE_11__geometry_Mesh__["a" /* default */](obj0, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["e" /* vec3 */].fromValues(0, 0, 0));
-    mesh.create();
+    // mesh = new Mesh(obj0, vec3.fromValues(0,0,0));
+    // mesh.create();
     // Set up instanced rendering data arrays here.
     // This example creates a set of positional
     // offsets and gradiated colors for a 100x100 grid
@@ -6123,51 +6132,148 @@ function loadScene() {
     // one square is actually passed to the GPU
     system.setMaxLength(controls.Road_Density);
     let data = system.runSystem();
-    buildsystem = new __WEBPACK_IMPORTED_MODULE_12__BuildingSystem__["a" /* default */](1.0, system);
-    // let poses = buildsystem.placeBuildings();
+    buildsystem = new __WEBPACK_IMPORTED_MODULE_13__BuildingSystem__["a" /* default */](10.0, system, window.innerWidth, window.innerHeight);
+    buildsystem.placeBuildings();
+    let buildings = buildsystem.buildings;
     let offsetsArray = [];
     let colorsArray = [];
     let r1Array = [];
     let r2Array = [];
     let r3Array = [];
     let scaleArray = [];
-    // let offsetsArrayB = [];
-    // let colorsArrayB = [];
-    // let r1ArrayB = [];
-    // let r2ArrayB = [];
-    // let r3ArrayB = [];
-    // let scaleArrayB = [];
+    let offsetsArrayB = [];
+    let colorsArrayB = [];
+    let r1ArrayB = [];
+    let r2ArrayB = [];
+    let r3ArrayB = [];
+    let scaleArrayB = [];
     let n = data[0].length;
-    // let n2: number = poses.length;
-    // for(let i = 0; i < n; i++) {
-    //     offsetsArrayB.push(poses[i][0]);
-    //     offsetsArrayB.push(0);
-    //     offsetsArrayB.push(poses[i][1]);
-    //     r1ArrayB.push(1);
-    //     r1ArrayB.push(0);
-    //     r1ArrayB.push(0);
-    //     r2ArrayB.push(0);
-    //     r2ArrayB.push(1);
-    //     r2ArrayB.push(0);
-    //     r3ArrayB.push(0);
-    //     r3ArrayB.push(0);
-    //     r3ArrayB.push(1);
-    //     scaleArrayB.push(1);
-    //     scaleArrayB.push(1);
-    //     scaleArrayB.push(1);
-    //     colorsArrayB.push(1.0);
-    //     colorsArrayB.push(1.0);
-    //     colorsArrayB.push(0.0);
-    //     colorsArrayB.push(1.0);
-    // }
-    // let offsetsB: Float32Array = new Float32Array(offsetsArrayB);
-    // let colorsB: Float32Array = new Float32Array(colorsArrayB);
-    // let r1sB: Float32Array = new Float32Array(r1ArrayB);
-    // let r2sB: Float32Array = new Float32Array(r2ArrayB);
-    // let r3sB: Float32Array = new Float32Array(r3ArrayB);
-    // let scalesB: Float32Array = new Float32Array(scaleArrayB);
-    // square.setInstanceVBOs(offsetsB, colorsB, r1sB, r2sB, r3sB, scalesB);
-    // square.setNumInstances(n2); // grid of "particles"
+    let numInstancesH = 0;
+    //console.log("n2: " + n2);
+    for (let i = 0; i < buildings.length; i++) {
+        for (let j = 0; j < buildings[i].positions.length; j++) {
+            if (buildings[i].positions[j][3] == 1.0) {
+                offsetsArrayB.push(1.0 * ((buildings[i].positions[j][0] * 2.0 / buildsystem.gridWidth) - 1.0));
+                offsetsArrayB.push(0.02 * buildings[i].positions[j][1]);
+                offsetsArrayB.push(1.0 * ((buildings[i].positions[j][2] * 2.0 / buildsystem.gridHeight) - 1.0));
+                numInstancesH += 1;
+                //console.log(1.0 * ((buildings[i].positions[j][1] * 2.0 / buildsystem.gridHeight)));
+                //console.log("Pos: " + ((poses[i][0] * 2.0 / buildsystem.gridWidth) - 1.0) + ", " + ((poses[i][1] * 2.0 / buildsystem.gridWidth) - 1.0));
+                r1ArrayB.push(1.0);
+                r1ArrayB.push(0.0);
+                r1ArrayB.push(0.0);
+                r2ArrayB.push(0.0);
+                r2ArrayB.push(1.0);
+                r2ArrayB.push(0.0);
+                r3ArrayB.push(0.0);
+                r3ArrayB.push(0.0);
+                r3ArrayB.push(1.0);
+                scaleArrayB.push(0.01);
+                scaleArrayB.push(0.01);
+                scaleArrayB.push(0.01);
+                colorsArrayB.push(1.0);
+                colorsArrayB.push(1.0);
+                colorsArrayB.push(0.0);
+                colorsArrayB.push(1.0);
+            }
+        }
+    }
+    let offsetsB = new Float32Array(offsetsArrayB);
+    let colorsB = new Float32Array(colorsArrayB);
+    let r1sB = new Float32Array(r1ArrayB);
+    let r2sB = new Float32Array(r2ArrayB);
+    let r3sB = new Float32Array(r3ArrayB);
+    let scalesB = new Float32Array(scaleArrayB);
+    hexagon.setInstanceVBOs(offsetsB, colorsB, r1sB, r2sB, r3sB, scalesB);
+    hexagon.setNumInstances(numInstancesH); // grid of "particles"
+    let numInstancesC = 0;
+    //console.log("n2: " + n2);
+    offsetsArrayB = [];
+    colorsArrayB = [];
+    r1ArrayB = [];
+    r2ArrayB = [];
+    r3ArrayB = [];
+    scaleArrayB = [];
+    for (let i = 0; i < buildings.length; i++) {
+        for (let j = 0; j < buildings[i].positions.length; j++) {
+            if (buildings[i].positions[j][3] == 2.0) {
+                offsetsArrayB.push(1.0 * ((buildings[i].positions[j][0] * 2.0 / buildsystem.gridWidth) - 1.0));
+                offsetsArrayB.push(0.02 * buildings[i].positions[j][1]);
+                offsetsArrayB.push(1.0 * ((buildings[i].positions[j][2] * 2.0 / buildsystem.gridHeight) - 1.0));
+                numInstancesC += 1;
+                //console.log(1.0 * ((buildings[i].positions[j][1] * 2.0 / buildsystem.gridHeight)));
+                //console.log("Pos: " + ((poses[i][0] * 2.0 / buildsystem.gridWidth) - 1.0) + ", " + ((poses[i][1] * 2.0 / buildsystem.gridWidth) - 1.0));
+                r1ArrayB.push(1.0);
+                r1ArrayB.push(0.0);
+                r1ArrayB.push(0.0);
+                r2ArrayB.push(0.0);
+                r2ArrayB.push(1.0);
+                r2ArrayB.push(0.0);
+                r3ArrayB.push(0.0);
+                r3ArrayB.push(0.0);
+                r3ArrayB.push(1.0);
+                scaleArrayB.push(0.01);
+                scaleArrayB.push(0.01);
+                scaleArrayB.push(0.01);
+                colorsArrayB.push(1.0);
+                colorsArrayB.push(1.0);
+                colorsArrayB.push(0.0);
+                colorsArrayB.push(1.0);
+            }
+        }
+    }
+    offsetsB = new Float32Array(offsetsArrayB);
+    colorsB = new Float32Array(colorsArrayB);
+    r1sB = new Float32Array(r1ArrayB);
+    r2sB = new Float32Array(r2ArrayB);
+    r3sB = new Float32Array(r3ArrayB);
+    scalesB = new Float32Array(scaleArrayB);
+    cylinder.setInstanceVBOs(offsetsB, colorsB, r1sB, r2sB, r3sB, scalesB);
+    cylinder.setNumInstances(numInstancesC); // grid of "particles"
+    let numInstancesCu = 0;
+    //console.log("n2: " + n2);
+    offsetsArrayB = [];
+    colorsArrayB = [];
+    r1ArrayB = [];
+    r2ArrayB = [];
+    r3ArrayB = [];
+    scaleArrayB = [];
+    for (let i = 0; i < buildings.length; i++) {
+        for (let j = 0; j < buildings[i].positions.length; j++) {
+            if (buildings[i].positions[j][3] == 0.0) {
+                offsetsArrayB.push(1.0 * ((buildings[i].positions[j][0] * 2.0 / buildsystem.gridWidth) - 1.0));
+                offsetsArrayB.push(0.02 * buildings[i].positions[j][1]);
+                offsetsArrayB.push(1.0 * ((buildings[i].positions[j][2] * 2.0 / buildsystem.gridHeight) - 1.0));
+                numInstancesCu += 1;
+                //console.log(1.0 * ((buildings[i].positions[j][1] * 2.0 / buildsystem.gridHeight)));
+                //console.log("Pos: " + ((poses[i][0] * 2.0 / buildsystem.gridWidth) - 1.0) + ", " + ((poses[i][1] * 2.0 / buildsystem.gridWidth) - 1.0));
+                r1ArrayB.push(1.0);
+                r1ArrayB.push(0.0);
+                r1ArrayB.push(0.0);
+                r2ArrayB.push(0.0);
+                r2ArrayB.push(1.0);
+                r2ArrayB.push(0.0);
+                r3ArrayB.push(0.0);
+                r3ArrayB.push(0.0);
+                r3ArrayB.push(1.0);
+                scaleArrayB.push(0.01);
+                scaleArrayB.push(0.01);
+                scaleArrayB.push(0.01);
+                colorsArrayB.push(1.0);
+                colorsArrayB.push(1.0);
+                colorsArrayB.push(0.0);
+                colorsArrayB.push(1.0);
+            }
+        }
+    }
+    offsetsB = new Float32Array(offsetsArrayB);
+    colorsB = new Float32Array(colorsArrayB);
+    r1sB = new Float32Array(r1ArrayB);
+    r2sB = new Float32Array(r2ArrayB);
+    r3sB = new Float32Array(r3ArrayB);
+    scalesB = new Float32Array(scaleArrayB);
+    cube.setInstanceVBOs(offsetsB, colorsB, r1sB, r2sB, r3sB, scalesB);
+    cube.setNumInstances(numInstancesCu); // grid of "particles"
     for (let i = 0; i < n; i++) {
         var pos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["e" /* vec3 */].create();
         for (let j = 0; j < n; j++) {
@@ -6179,7 +6285,7 @@ function loadScene() {
             pos = position;
             offsetsArray.push(position[0]);
             offsetsArray.push(position[1]);
-            offsetsArray.push(position[2]);
+            offsetsArray.push(1.0);
             r1Array.push(r1[0]);
             r1Array.push(r1[1]);
             r1Array.push(r1[2]);
@@ -6191,7 +6297,7 @@ function loadScene() {
             r3Array.push(r3[2]);
             scaleArray.push(scale[0]);
             scaleArray.push(scale[1]);
-            scaleArray.push(scale[2]);
+            scaleArray.push(1.0);
             if (i == 0) {
                 colorsArray.push(1.0);
                 colorsArray.push(1.0);
@@ -6263,7 +6369,7 @@ function loadTexture(camera, textureBuffer, renderer, gl, m_renderedTexture, m_d
         system = new __WEBPACK_IMPORTED_MODULE_9__RoadSystem__["a" /* default */](pixels, 5.0, window.innerHeight, window.innerWidth);
     }
 }
-function load(camera, textureBuffer, renderer, gl, m_renderedTexture, m_depthRenderBuffer, m_frameBuffer) {
+function load(camera, textureBuffer, renderer, gl, m_renderedTexture, m_depthRenderBuffer, m_frameBuffer, postProcessPass) {
     loadTexture(camera, textureBuffer, renderer, gl, m_renderedTexture, m_depthRenderBuffer, m_frameBuffer);
     loadScene();
     // Tell OpenGL to render to the viewport's frame buffer
@@ -6309,21 +6415,30 @@ function main() {
     // gl.blendFunc(gl.ONE, gl.ONE); // Additive blending
     gl.enable(gl.DEPTH_TEST);
     const instancedShader = new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_ShaderProgram__["b" /* default */]([
-        new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_ShaderProgram__["a" /* Shader */](gl.VERTEX_SHADER, __webpack_require__(77)),
-        new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_ShaderProgram__["a" /* Shader */](gl.FRAGMENT_SHADER, __webpack_require__(78)),
-    ]);
-    const flat = new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_ShaderProgram__["b" /* default */]([
         new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_ShaderProgram__["a" /* Shader */](gl.VERTEX_SHADER, __webpack_require__(79)),
         new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_ShaderProgram__["a" /* Shader */](gl.FRAGMENT_SHADER, __webpack_require__(80)),
     ]);
-    const textureBuffer = new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_ShaderProgram__["b" /* default */]([
+    const buildingsShader = new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_ShaderProgram__["b" /* default */]([
         new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_ShaderProgram__["a" /* Shader */](gl.VERTEX_SHADER, __webpack_require__(81)),
         new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_ShaderProgram__["a" /* Shader */](gl.FRAGMENT_SHADER, __webpack_require__(82)),
+    ]);
+    const flat = new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_ShaderProgram__["b" /* default */]([
+        new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_ShaderProgram__["a" /* Shader */](gl.VERTEX_SHADER, __webpack_require__(83)),
+        new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_ShaderProgram__["a" /* Shader */](gl.FRAGMENT_SHADER, __webpack_require__(84)),
+    ]);
+    const textureBuffer = new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_ShaderProgram__["b" /* default */]([
+        new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_ShaderProgram__["a" /* Shader */](gl.VERTEX_SHADER, __webpack_require__(85)),
+        new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_ShaderProgram__["a" /* Shader */](gl.FRAGMENT_SHADER, __webpack_require__(86)),
+    ]);
+    const skyShader = new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_ShaderProgram__["b" /* default */]([
+        new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_ShaderProgram__["a" /* Shader */](gl.VERTEX_SHADER, __webpack_require__(87)),
+        new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_ShaderProgram__["a" /* Shader */](gl.FRAGMENT_SHADER, __webpack_require__(88)),
     ]);
     var m_renderedTexture = gl.createTexture();
     var m_depthRenderBuffer = gl.createRenderbuffer();
     var m_frameBuffer = gl.createFramebuffer();
-    load(camera, textureBuffer, renderer, gl, m_renderedTexture, m_depthRenderBuffer, m_frameBuffer);
+    var postProcessPass = gl.createFramebuffer();
+    load(camera, textureBuffer, renderer, gl, m_renderedTexture, m_depthRenderBuffer, m_frameBuffer, postProcessPass);
     // This function will be called every frame
     let prevPop = controls.Population_Density;
     let prevRoad = controls.Road_Density;
@@ -6334,27 +6449,33 @@ function main() {
             prevPop = controls.Population_Density;
             let state = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["f" /* vec4 */].fromValues(controls.Population_Density, controls.Water_Level, 0, 0);
             textureBuffer.setState(state);
-            load(camera, textureBuffer, renderer, gl, m_renderedTexture, m_depthRenderBuffer, m_frameBuffer);
+            load(camera, textureBuffer, renderer, gl, m_renderedTexture, m_depthRenderBuffer, m_frameBuffer, postProcessPass);
         }
         if (controls.Road_Density - prevRoad != 0.0) {
             prevRoad = controls.Road_Density;
-            load(camera, textureBuffer, renderer, gl, m_renderedTexture, m_depthRenderBuffer, m_frameBuffer);
+            load(camera, textureBuffer, renderer, gl, m_renderedTexture, m_depthRenderBuffer, m_frameBuffer, postProcessPass);
         }
         if (controls.Water_Level - prevWater != 0.0) {
             prevWater = controls.Water_Level;
             let state = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["f" /* vec4 */].fromValues(controls.Population_Density, controls.Water_Level, 0, 0);
             textureBuffer.setState(state);
-            load(camera, textureBuffer, renderer, gl, m_renderedTexture, m_depthRenderBuffer, m_frameBuffer);
+            load(camera, textureBuffer, renderer, gl, m_renderedTexture, m_depthRenderBuffer, m_frameBuffer, postProcessPass);
         }
         camera.update();
         stats.begin();
         instancedShader.setTime(time);
+        buildingsShader.setTime(time);
+        skyShader.setTime(time);
         flat.setTime(time++);
         flat.setState(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["f" /* vec4 */].fromValues(controls.Height_Map, controls.Density_Map, (controls.Height_Map + controls.Density_Map) - 1.0, controls.Land_Water_Mode));
         gl.viewport(0, 0, window.innerWidth, window.innerHeight);
         renderer.render(camera, flat, [plane]);
+        renderer.render(camera, skyShader, [screenQuad]);
         renderer.render(camera, instancedShader, [
             square,
+        ]);
+        renderer.render(camera, buildingsShader, [
+            cube, hexagon, cylinder,
         ]);
         stats.end();
         // Tell the browser to call `tick` again whenever it renders a new frame
@@ -16866,7 +16987,7 @@ class RoadSystem {
     buildRasterizedGrid(width) {
         //x + this.width * y
         //length is heightDensityData
-        let grid = new Array(this.height * this.width);
+        var grid = new Array(this.height * this.width);
         for (let i = 0; i < this.width; i++) {
             for (let j = 0; j < this.height; j++) {
                 var green = this.heightDensityData[(i + this.width * j) * 4.0 + 1.0];
@@ -16882,11 +17003,26 @@ class RoadSystem {
         //now rasterize the edges
         for (let i = 0; i < this.edges.length; i++) {
             let edge = this.edges[i];
-            let maxY = Math.max(edge.v2[1], edge.v1[1]);
-            let minY = Math.min(edge.v2[1], edge.v1[1]);
-            let xMin = Math.min(edge.v2[0], edge.v1[0]);
-            let xMax = Math.max(edge.v2[0], edge.v1[0]);
+            let v1 = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec2 */].fromValues(edge.v1[0], edge.v1[1]);
+            let endpt = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec2 */].fromValues(0, 0);
+            let o = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec2 */].fromValues(edge.direction[0], edge.direction[1]);
+            __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec2 */].mul(o, o, __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec2 */].fromValues(length, length));
+            __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec2 */].add(endpt, v1, o);
+            let v2 = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec2 */].fromValues(endpt[0], endpt[1]);
+            let x1 = (v1[0] + 1.0) * (this.width) / 2.0; // (2.0 / this.width) - 1.0
+            let y1 = (v1[1] + 1.0) * (this.height) / 2.0;
+            let x2 = (v2[0] + 1.0) * (this.width) / 2.0;
+            let y2 = (v2[1] + 1.0) * (this.height) / 2.0;
+            let maxY = Math.max(y2, y1);
+            let minY = Math.min(y2, y1);
+            let xMin = Math.min(x1, x2);
+            let xMax = Math.max(x1, x2);
+            // maxY = (maxY + 1.0) * this.height * 0.5;
+            // minY = (minY + 1.0) * this.height * 0.5;
+            // xMax = (xMax + 1.0) * this.width * 0.5;
+            // xMin = (xMin + 1.0) * this.width * 0.5;
             let m = (maxY - minY) / (xMax - xMin);
+            //console.log(grid.length);
             //check if the road is horizontal!
             if (minY == maxY) {
                 for (let x = Math.floor(xMin); x <= Math.ceil(xMax); x++) {
@@ -16905,9 +17041,11 @@ class RoadSystem {
             else {
                 for (let y = Math.floor(minY); y <= Math.ceil(maxY); y++) {
                     let x1 = edge.v1[0];
+                    x1 = (x1 + 1.0) * ((this.width) / 2.0);
                     let y1 = edge.v1[1];
-                    let X = ((y - y1) / m) + x1;
-                    for (let x = Math.floor(X - width); x <= Math.floor(X + width); x++) {
+                    y1 = (y1 + 1.0) * ((this.height) / 2.0);
+                    let X = ((minY - y1) / m) + x1;
+                    for (let x = Math.floor(X - width); x <= Math.ceil(X + width); x++) {
                         grid[x + this.width * y] = 0;
                     }
                 }
@@ -17838,7 +17976,141 @@ class Plane extends __WEBPACK_IMPORTED_MODULE_1__rendering_gl_Drawable__["a" /* 
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__rendering_gl_Drawable__ = __webpack_require__(3);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__globals__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_webgl_obj_loader__ = __webpack_require__(75);
+
+
+
+class Cube extends __WEBPACK_IMPORTED_MODULE_1__rendering_gl_Drawable__["a" /* default */] {
+    constructor(center) {
+        super(); // Call the constructor of the super class. This is required.
+        this.center = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["f" /* vec4 */].fromValues(center[0], center[1], center[2], 1);
+    }
+    create() {
+        //front face
+        this.indices = new Uint32Array([0, 1, 2,
+            0, 2, 3,
+            4, 5, 6,
+            4, 6, 7,
+            8, 9, 10,
+            8, 10, 11,
+            12, 13, 14,
+            12, 14, 15,
+            16, 17, 18,
+            16, 18, 19,
+            20, 21, 22,
+            20, 22, 23
+        ]);
+        this.normals = new Float32Array([0, 0, 1, 0,
+            0, 0, 1, 0,
+            0, 0, 1, 0,
+            0, 0, 1, 0,
+            /*right face*/
+            1, 0, 0, 0,
+            1, 0, 0, 0,
+            1, 0, 0, 0,
+            1, 0, 0, 0,
+            /*back face*/
+            0, 0, -1, 0,
+            0, 0, -1, 0,
+            0, 0, -1, 0,
+            0, 0, -1, 0,
+            /*left face*/
+            -1, 0, 0, 0,
+            -1, 0, 0, 0,
+            -1, 0, 0, 0,
+            -1, 0, 0, 0,
+            /*top face*/
+            0, 1, 0, 0,
+            0, 1, 0, 0,
+            0, 1, 0, 0,
+            0, 1, 0, 0,
+            /*bottom face*/
+            0, -1, 0, 0,
+            0, -1, 0, 0,
+            0, -1, 0, 0,
+            0, -1, 0, 0
+        ]);
+        this.positions = new Float32Array([this.center[0] - 1, this.center[1] - 1, this.center[2] + 1, 1,
+            this.center[0] + 1, this.center[1] - 1, this.center[2] + 1, 1,
+            this.center[0] + 1, this.center[1] + 1, this.center[2] + 1, 1,
+            this.center[0] - 1, this.center[1] + 1, this.center[2] + 1, 1,
+            /*right face*/
+            this.center[0] + 1, this.center[1] - 1, this.center[2] + 1, 1,
+            this.center[0] + 1, this.center[1] - 1, this.center[2] - 1, 1,
+            this.center[0] + 1, this.center[1] + 1, this.center[2] - 1, 1,
+            this.center[0] + 1, this.center[1] + 1, this.center[2] + 1, 1,
+            /*back face*/
+            this.center[0] - 1, this.center[1] - 1, this.center[2] - 1, 1,
+            this.center[0] + 1, this.center[1] - 1, this.center[2] - 1, 1,
+            this.center[0] + 1, this.center[1] + 1, this.center[2] - 1, 1,
+            this.center[0] - 1, this.center[1] + 1, this.center[2] - 1, 1,
+            /*left face*/
+            this.center[0] - 1, this.center[1] - 1, this.center[2] + 1, 1,
+            this.center[0] - 1, this.center[1] - 1, this.center[2] - 1, 1,
+            this.center[0] - 1, this.center[1] + 1, this.center[2] - 1, 1,
+            this.center[0] - 1, this.center[1] + 1, this.center[2] + 1, 1,
+            /*top face*/
+            this.center[0] + 1, this.center[1] + 1, this.center[2] + 1, 1,
+            this.center[0] + 1, this.center[1] + 1, this.center[2] - 1, 1,
+            this.center[0] - 1, this.center[1] + 1, this.center[2] - 1, 1,
+            this.center[0] - 1, this.center[1] + 1, this.center[2] + 1, 1,
+            /*bottom face*/
+            this.center[0] + 1, this.center[1] - 1, this.center[2] + 1, 1,
+            this.center[0] - 1, this.center[1] - 1, this.center[2] + 1, 1,
+            this.center[0] - 1, this.center[1] - 1, this.center[2] - 1, 1,
+            this.center[0] + 1, this.center[1] - 1, this.center[2] - 1, 1
+        ]);
+        this.generateIdx();
+        this.generatePos();
+        this.generateNor();
+        this.generateCol();
+        this.generateTranslate();
+        this.generateR1();
+        this.generateR2();
+        this.generateR3();
+        this.generateScale();
+        this.count = this.indices.length;
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ELEMENT_ARRAY_BUFFER, this.bufIdx);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bufferData(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ELEMENT_ARRAY_BUFFER, this.indices, __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].STATIC_DRAW);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.bufNor);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bufferData(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.normals, __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].STATIC_DRAW);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.bufPos);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bufferData(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.positions, __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].STATIC_DRAW);
+        console.log(`Created cube`);
+    }
+    setInstanceVBOs(offsets, colors, r1s, r2s, r3s, scales) {
+        this.colors = colors;
+        this.offsets = offsets;
+        this.r1s = r1s;
+        this.r2s = r2s;
+        this.r3s = r3s;
+        this.scales = scales;
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.bufCol);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bufferData(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.colors, __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].STATIC_DRAW);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.bufTranslate);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bufferData(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.offsets, __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].STATIC_DRAW);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.bufR1);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bufferData(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.r1s, __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].STATIC_DRAW);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.bufR2);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bufferData(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.r2s, __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].STATIC_DRAW);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.bufR3);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bufferData(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.r3s, __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].STATIC_DRAW);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.bufScale);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bufferData(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.scales, __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].STATIC_DRAW);
+    }
+}
+;
+/* harmony default export */ __webpack_exports__["a"] = (Cube);
+
+
+/***/ }),
+/* 75 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__rendering_gl_Drawable__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__globals__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_webgl_obj_loader__ = __webpack_require__(76);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_webgl_obj_loader___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_webgl_obj_loader__);
 
 
@@ -17929,35 +18201,56 @@ class Mesh extends __WEBPACK_IMPORTED_MODULE_1__rendering_gl_Drawable__["a" /* d
 
 
 /***/ }),
-/* 75 */
+/* 76 */
 /***/ (function(module, exports, __webpack_require__) {
 
 !function(e,t){ true?module.exports=t():"function"==typeof define&&define.amd?define("OBJ",[],t):"object"==typeof exports?exports.OBJ=t():e.OBJ=t()}("undefined"!=typeof self?self:this,function(){return function(e){function t(a){if(r[a])return r[a].exports;var n=r[a]={i:a,l:!1,exports:{}};return e[a].call(n.exports,n,n.exports,t),n.l=!0,n.exports}var r={};return t.m=e,t.c=r,t.d=function(exports,e,r){t.o(exports,e)||Object.defineProperty(exports,e,{configurable:!1,enumerable:!0,get:r})},t.n=function(e){var r=e&&e.__esModule?function(){return e.default}:function(){return e};return t.d(r,"a",r),r},t.o=function(e,t){return Object.prototype.hasOwnProperty.call(e,t)},t.p="/",t(t.s=3)}([function(e,exports,t){"use strict";function r(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}function a(e){switch(e){case"BYTE":case"UNSIGNED_BYTE":return 1;case"SHORT":case"UNSIGNED_SHORT":return 2;case"FLOAT":return 4}}Object.defineProperty(exports,"__esModule",{value:!0});var n=exports.Layout=function e(){r(this,e);for(var t=arguments.length,a=Array(t),n=0;n<t;n++)a[n]=arguments[n];this.attributes=a;var s=0,l=0,o=!0,u=!1,c=void 0;try{for(var f,h=a[Symbol.iterator]();!(o=(f=h.next()).done);o=!0){var p=f.value;if(this[p.key])throw new i(p);s%p.sizeOfType!=0&&(s+=p.sizeOfType-s%p.sizeOfType),this[p.key]={attribute:p,size:p.size,type:p.type,normalized:p.normalized,offset:s},s+=p.sizeInBytes,l=Math.max(l,p.sizeOfType)}}catch(e){u=!0,c=e}finally{try{!o&&h.return&&h.return()}finally{if(u)throw c}}s%l!=0&&(s+=l-s%l),this.stride=s;var v=!0,d=!1,y=void 0;try{for(var m,M=a[Symbol.iterator]();!(v=(m=M.next()).done);v=!0){this[m.value.key].stride=this.stride}}catch(e){d=!0,y=e}finally{try{!v&&M.return&&M.return()}finally{if(d)throw y}}},i=function e(t){r(this,e),this.message="found duplicate attribute: "+t.key},s=function e(t,n,i){arguments.length>3&&void 0!==arguments[3]&&arguments[3];r(this,e),this.key=t,this.size=n,this.type=i,this.normalized=!1,this.sizeOfType=a(i),this.sizeInBytes=this.sizeOfType*n};n.POSITION=new s("position",3,"FLOAT"),n.NORMAL=new s("normal",3,"FLOAT"),n.TANGENT=new s("tangent",3,"FLOAT"),n.BITANGENT=new s("bitangent",3,"FLOAT"),n.UV=new s("uv",2,"FLOAT"),n.MATERIAL_INDEX=new s("materialIndex",1,"SHORT"),n.MATERIAL_ENABLED=new s("materialEnabled",1,"UNSIGNED_SHORT"),n.AMBIENT=new s("ambient",3,"FLOAT"),n.DIFFUSE=new s("diffuse",3,"FLOAT"),n.SPECULAR=new s("specular",3,"FLOAT"),n.SPECULAR_EXPONENT=new s("specularExponent",3,"FLOAT"),n.EMISSIVE=new s("emissive",3,"FLOAT"),n.TRANSMISSION_FILTER=new s("transmissionFilter",3,"FLOAT"),n.DISSOLVE=new s("dissolve",1,"FLOAT"),n.ILLUMINATION=new s("illumination",1,"UNSIGNED_SHORT"),n.REFRACTION_INDEX=new s("refractionIndex",1,"FLOAT"),n.SHARPNESS=new s("sharpness",1,"FLOAT"),n.MAP_DIFFUSE=new s("mapDiffuse",1,"SHORT"),n.MAP_AMBIENT=new s("mapAmbient",1,"SHORT"),n.MAP_SPECULAR=new s("mapSpecular",1,"SHORT"),n.MAP_SPECULAR_EXPONENT=new s("mapSpecularExponent",1,"SHORT"),n.MAP_DISSOLVE=new s("mapDissolve",1,"SHORT"),n.ANTI_ALIASING=new s("antiAliasing",1,"UNSIGNED_SHORT"),n.MAP_BUMP=new s("mapBump",1,"SHORT"),n.MAP_DISPLACEMENT=new s("mapDisplacement",1,"SHORT"),n.MAP_DECAL=new s("mapDecal",1,"SHORT"),n.MAP_EMISSIVE=new s("mapEmissive",1,"SHORT")},function(e,exports,t){"use strict";function r(e){if(Array.isArray(e)){for(var t=0,r=Array(e.length);t<e.length;t++)r[t]=e[t];return r}return Array.from(e)}function a(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}Object.defineProperty(exports,"__esModule",{value:!0});var n=function(){function e(e,t){for(var r=0;r<t.length;r++){var a=t[r];a.enumerable=a.enumerable||!1,a.configurable=!0,"value"in a&&(a.writable=!0),Object.defineProperty(e,a.key,a)}}return function(t,r,a){return r&&e(t.prototype,r),a&&e(t,a),t}}(),i=t(0),s=function(){function e(t,n){a(this,e),n=n||{},n.materials=n.materials||{},n.enableWTextureCoord=!!n.enableWTextureCoord,n.indicesPerMaterial=!!n.indicesPerMaterial;var i=this;i.vertices=[],i.vertexNormals=[],i.textures=[],i.indices=[],i.textureStride=n.enableWTextureCoord?3:2,this.name="";var s=[],l=[],o=[],u={},c=[],f={},h=-1,p=0;u.verts=[],u.norms=[],u.textures=[],u.hashindices={},u.indices=[[]],u.materialIndices=[],u.index=0;for(var v=/^v\s/,d=/^vn\s/,y=/^vt\s/,m=/^f\s/,M=/\s+/,b=/^usemtl/,x=t.split("\n"),I=0;I<x.length;I++){var A=x[I].trim();if(A&&!A.startsWith("#")){var _=A.split(M);if(_.shift(),v.test(A))s.push.apply(s,r(_));else if(d.test(A))l.push.apply(l,r(_));else if(y.test(A)){var k=_;_.length>2&&!n.enableWTextureCoord?k=_.slice(0,2):2===_.length&&n.enableWTextureCoord&&k.push(0),o.push.apply(o,r(k))}else if(b.test(A)){var T=_[0];T in f||(c.push(T),f[T]=c.length-1,n.indicesPerMaterial&&f[T]>0&&u.indices.push([])),h=f[T],n.indicesPerMaterial&&(p=h)}else if(m.test(A))for(var w=!1,F=0,S=_.length;F<S;F++){3!==F||w||(F=2,w=!0);var E=_[0]+","+h,g=_[F]+","+h;if(g in u.hashindices)u.indices[p].push(u.hashindices[g]);else{var O=_[F].split("/"),B=O.length-1;if(u.verts.push(+s[3*(O[0]-1)+0]),u.verts.push(+s[3*(O[0]-1)+1]),u.verts.push(+s[3*(O[0]-1)+2]),o.length){var L=n.enableWTextureCoord?3:2;u.textures.push(+o[(O[1]-1)*L+0]),u.textures.push(+o[(O[1]-1)*L+1]),n.enableWTextureCoord&&u.textures.push(+o[(O[1]-1)*L+2])}u.norms.push(+l[3*(O[B]-1)+0]),u.norms.push(+l[3*(O[B]-1)+1]),u.norms.push(+l[3*(O[B]-1)+2]),u.materialIndices.push(h),u.hashindices[g]=u.index,u.indices[p].push(u.hashindices[g]),u.index+=1}3===F&&w&&u.indices[p].push(u.hashindices[E])}}}i.vertices=u.verts,i.vertexNormals=u.norms,i.textures=u.textures,i.vertexMaterialIndices=u.materialIndices,i.indices=n.indicesPerMaterial?u.indices:u.indices[p],i.materialNames=c,i.materialIndices=f,i.materialsByIndex={},n.calcTangentsAndBitangents&&this.calculateTangentsAndBitangents()}return n(e,[{key:"calculateTangentsAndBitangents",value:function(){var e={};e.tangents=[].concat(r(new Array(this.vertices.length))).map(function(e){return 0}),e.bitangents=[].concat(r(new Array(this.vertices.length))).map(function(e){return 0});var t=void 0;t=Array.isArray(this.indices[0])?[].concat.apply([],this.indices):this.indices;for(var a=this.vertices,n=this.vertexNormals,i=this.textures,s=0;s<t.length;s+=3){var l=t[s+0],o=t[s+1],u=t[s+2],c=a[3*l+0],f=a[3*l+1],h=a[3*l+2],p=i[2*l+0],v=i[2*l+1],d=a[3*o+0],y=a[3*o+1],m=a[3*o+2],M=i[2*o+0],b=i[2*o+1],x=a[3*u+0],I=a[3*u+1],A=a[3*u+2],_=i[2*u+0],k=i[2*u+1],T=d-c,w=y-f,F=m-h,S=x-c,E=I-f,g=A-h,O=M-p,B=b-v,L=_-p,N=k-v,R=O*N-B*L,P=1/(Math.abs(R<1e-4)?1:R),D=(T*N-S*B)*P,C=(w*N-E*B)*P,U=(F*N-g*B)*P,j=(S*O-T*L)*P,z=(E*O-w*L)*P,H=(g*O-F*L)*P,W=n[3*l+0],G=n[3*l+1],V=n[3*l+2],K=n[3*o+0],q=n[3*o+1],X=n[3*o+2],Y=n[3*u+0],J=n[3*u+1],Q=n[3*u+2],Z=D*W+C*G+U*V,ee=D*K+C*q+U*X,te=D*Y+C*J+U*Q,re=D-W*Z,ae=C-G*Z,ne=U-V*Z,ie=D-K*ee,se=C-q*ee,le=U-X*ee,oe=D-Y*te,ue=C-J*te,ce=U-Q*te,fe=Math.sqrt(re*re+ae*ae+ne*ne),he=Math.sqrt(ie*ie+se*se+le*le),pe=Math.sqrt(oe*oe+ue*ue+ce*ce),ve=j*W+z*G+H*V,de=j*K+z*q+H*X,ye=j*Y+z*J+H*Q,me=j-W*ve,Me=z-G*ve,be=H-V*ve,xe=j-K*de,Ie=z-q*de,Ae=H-X*de,_e=j-Y*ye,ke=z-J*ye,Te=H-Q*ye,we=Math.sqrt(me*me+Me*Me+be*be),Fe=Math.sqrt(xe*xe+Ie*Ie+Ae*Ae),Se=Math.sqrt(_e*_e+ke*ke+Te*Te);e.tangents[3*l+0]+=re/fe,e.tangents[3*l+1]+=ae/fe,e.tangents[3*l+2]+=ne/fe,e.tangents[3*o+0]+=ie/he,e.tangents[3*o+1]+=se/he,e.tangents[3*o+2]+=le/he,e.tangents[3*u+0]+=oe/pe,e.tangents[3*u+1]+=ue/pe,e.tangents[3*u+2]+=ce/pe,e.bitangents[3*l+0]+=me/we,e.bitangents[3*l+1]+=Me/we,e.bitangents[3*l+2]+=be/we,e.bitangents[3*o+0]+=xe/Fe,e.bitangents[3*o+1]+=Ie/Fe,e.bitangents[3*o+2]+=Ae/Fe,e.bitangents[3*u+0]+=_e/Se,e.bitangents[3*u+1]+=ke/Se,e.bitangents[3*u+2]+=Te/Se}this.tangents=e.tangents,this.bitangents=e.bitangents}},{key:"makeBufferData",value:function(e){var t=this.vertices.length/3,r=new ArrayBuffer(e.stride*t);r.numItems=t;for(var a=new DataView(r),n=0,s=0;n<t;n++){s=n*e.stride;var l=!0,o=!1,u=void 0;try{for(var c,f=e.attributes[Symbol.iterator]();!(l=(c=f.next()).done);l=!0){var h=c.value,p=s+e[h.key].offset;switch(h.key){case i.Layout.POSITION.key:a.setFloat32(p,this.vertices[3*n],!0),a.setFloat32(p+4,this.vertices[3*n+1],!0),a.setFloat32(p+8,this.vertices[3*n+2],!0);break;case i.Layout.UV.key:a.setFloat32(p,this.textures[2*n],!0),a.setFloat32(p+4,this.vertices[2*n+1],!0);break;case i.Layout.NORMAL.key:a.setFloat32(p,this.vertexNormals[3*n],!0),a.setFloat32(p+4,this.vertexNormals[3*n+1],!0),a.setFloat32(p+8,this.vertexNormals[3*n+2],!0);break;case i.Layout.MATERIAL_INDEX.key:a.setInt16(p,this.vertexMaterialIndices[n],!0);break;case i.Layout.AMBIENT.key:var v=this.vertexMaterialIndices[n],d=this.materialsByIndex[v];if(!d)break;a.setFloat32(p,d.ambient[0],!0),a.setFloat32(p+4,d.ambient[1],!0),a.setFloat32(p+8,d.ambient[2],!0);break;case i.Layout.DIFFUSE.key:var y=this.vertexMaterialIndices[n],m=this.materialsByIndex[y];if(!m)break;a.setFloat32(p,m.diffuse[0],!0),a.setFloat32(p+4,m.diffuse[1],!0),a.setFloat32(p+8,m.diffuse[2],!0);break;case i.Layout.SPECULAR.key:var M=this.vertexMaterialIndices[n],b=this.materialsByIndex[M];if(!b)break;a.setFloat32(p,b.specular[0],!0),a.setFloat32(p+4,b.specular[1],!0),a.setFloat32(p+8,b.specular[2],!0);break;case i.Layout.SPECULAR_EXPONENT.key:var x=this.vertexMaterialIndices[n],I=this.materialsByIndex[x];if(!I)break;a.setFloat32(p,I.specularExponent,!0);break;case i.Layout.EMISSIVE.key:var A=this.vertexMaterialIndices[n],_=this.materialsByIndex[A];if(!_)break;a.setFloat32(p,_.emissive[0],!0),a.setFloat32(p+4,_.emissive[1],!0),a.setFloat32(p+8,_.emissive[2],!0);break;case i.Layout.TRANSMISSION_FILTER.key:var k=this.vertexMaterialIndices[n],T=this.materialsByIndex[k];if(!T)break;a.setFloat32(p,T.transmissionFilter[0],!0),a.setFloat32(p+4,T.transmissionFilter[1],!0),a.setFloat32(p+8,T.transmissionFilter[2],!0);break;case i.Layout.DISSOLVE.key:var w=this.vertexMaterialIndices[n],F=this.materialsByIndex[w];if(!F)break;a.setFloat32(p,F.dissolve,!0);break;case i.Layout.ILLUMINATION.key:var S=this.vertexMaterialIndices[n],E=this.materialsByIndex[S];if(!E)break;a.setInt16(p,E.illumination,!0);break;case i.Layout.REFRACTION_INDEX.key:var g=this.vertexMaterialIndices[n],O=this.materialsByIndex[g];if(!O)break;a.setFloat32(p,O.refractionIndex,!0);break;case i.Layout.SHARPNESS.key:var B=this.vertexMaterialIndices[n],L=this.materialsByIndex[B];if(!L)break;a.setFloat32(p,L.sharpness,!0);break;case i.Layout.ANTI_ALIASING.key:var N=this.vertexMaterialIndices[n],R=this.materialsByIndex[N];if(!R)break;a.setInt16(p,R.antiAliasing,!0)}}}catch(e){o=!0,u=e}finally{try{!l&&f.return&&f.return()}finally{if(o)throw u}}}return r}},{key:"makeIndexBufferData",value:function(){var e=new Uint16Array(this.indices);return e.numItems=this.indices.length,e}},{key:"addMaterialLibrary",value:function(e){for(var t in e.materials)if(t in this.materialIndices){var r=e.materials[t],a=this.materialIndices[r.name];this.materialsByIndex[a]=r}}}]),e}();exports.default=s},function(e,exports,t){"use strict";function r(e){return Array.isArray(e)?e:Array.from(e)}function a(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}Object.defineProperty(exports,"__esModule",{value:!0});var n=function(){function e(e,t){for(var r=0;r<t.length;r++){var a=t[r];a.enumerable=a.enumerable||!1,a.configurable=!0,"value"in a&&(a.writable=!0),Object.defineProperty(e,a.key,a)}}return function(t,r,a){return r&&e(t.prototype,r),a&&e(t,a),t}}(),i=exports.Material=function e(t){a(this,e),this.name=t,this.ambient=[0,0,0],this.diffuse=[0,0,0],this.specular=[0,0,0],this.emissive=[0,0,0],this.transmissionFilter=[0,0,0],this.dissolve=0,this.specularExponent=0,this.transparency=0,this.illumination=0,this.refractionIndex=1,this.sharpness=0,this.mapDiffuse=null,this.mapAmbient=null,this.mapSpecular=null,this.mapSpecularExponent=null,this.mapDissolve=null,this.antiAliasing=!1,this.mapBump=null,this.mapDisplacement=null,this.mapDecal=null,this.mapEmissive=null,this.mapReflections=[]};exports.MaterialLibrary=function(){function e(t){a(this,e),this.data=t,this.currentMaterial=null,this.materials={},this.parse()}return n(e,[{key:"parse_newmtl",value:function(e){var t=e[0];this.currentMaterial=new i(t),this.materials[t]=this.currentMaterial}},{key:"parseColor",value:function(e){if("spectral"!=e[0]&&"xyz"!=e[0]){if(3==e.length)return e.map(parseFloat);var t=parseFloat(e[0]);return[t,t,t]}}},{key:"parse_Ka",value:function(e){this.currentMaterial.ambient=this.parseColor(e)}},{key:"parse_Kd",value:function(e){this.currentMaterial.diffuse=this.parseColor(e)}},{key:"parse_Ks",value:function(e){this.currentMaterial.specular=this.parseColor(e)}},{key:"parse_Ke",value:function(e){this.currentMaterial.emissive=this.parseColor(e)}},{key:"parse_Tf",value:function(e){this.currentMaterial.transmissionFilter=this.parseColor(e)}},{key:"parse_d",value:function(e){this.currentMaterial.dissolve=parseFloat(e.pop())}},{key:"parse_illum",value:function(e){this.currentMaterial.illumination=parseInt(e[0])}},{key:"parse_Ni",value:function(e){this.currentMaterial.refractionIndex=parseFloat(e[0])}},{key:"parse_Ns",value:function(e){this.currentMaterial.specularExponent=parseInt(e[0])}},{key:"parse_sharpness",value:function(e){this.currentMaterial.sharpness=parseInt(e[0])}},{key:"parse_cc",value:function(e,t){t.colorCorrection="on"==e[0]}},{key:"parse_blendu",value:function(e,t){t.horizontalBlending="on"==e[0]}},{key:"parse_blendv",value:function(e,t){t.verticalBlending="on"==e[0]}},{key:"parse_boost",value:function(e,t){t.boostMipMapSharpness=parseFloat(e[0])}},{key:"parse_mm",value:function(e,t){t.modifyTextureMap.brightness=parseFloat(e[0]),t.modifyTextureMap.contrast=parseFloat(e[1])}},{key:"parse_ost",value:function(e,t,r){for(;e.length<3;)e.push(r);t.u=parseFloat(e[0]),t.v=parseFloat(e[1]),t.w=parseFloat(e[2])}},{key:"parse_o",value:function(e,t){this.parse_ost(e,t.offset,0)}},{key:"parse_s",value:function(e,t){this.parse_ost(e,t.scale,1)}},{key:"parse_t",value:function(e,t){this.parse_ost(e,t.turbulence,0)}},{key:"parse_texres",value:function(e,t){t.textureResolution=parseFloat(e[0])}},{key:"parse_clamp",value:function(e,t){t.clamp="on"==e[0]}},{key:"parse_bm",value:function(e,t){t.bumpMultiplier=parseFloat(e[0])}},{key:"parse_imfchan",value:function(e,t){t.imfChan=e[0]}},{key:"parse_type",value:function(e,t){t.reflectionType=e[0]}},{key:"parseOptions",value:function(e){var t={colorCorrection:!1,horizontalBlending:!0,verticalBlending:!0,boostMipMapSharpness:0,modifyTextureMap:{brightness:0,contrast:1},offset:{u:0,v:0,w:0},scale:{u:1,v:1,w:1},turbulence:{u:0,v:0,w:0},clamp:!1,textureResolution:null,bumpMultiplier:1,imfChan:null},r=void 0,a=void 0,n={};for(e.reverse();e.length;){var i=e.pop();i.startsWith("-")?(r=i.substr(1),n[r]=[]):n[r].push(i)}for(r in n)if(n.hasOwnProperty(r)){a=n[r];var s=this["parse_"+r];s&&s.bind(this)(a,t)}return t}},{key:"parseMap",value:function(e){var t=void 0,a=void 0;if(e[0].startsWith("-"))t=e.pop(),a=e;else{var n=r(e);t=n[0],a=n.slice(1)}return a=this.parseOptions(a),a.filename=t,a}},{key:"parse_map_Ka",value:function(e){this.currentMaterial.mapAmbient=this.parseMap(e)}},{key:"parse_map_Kd",value:function(e){this.currentMaterial.mapDiffuse=this.parseMap(e)}},{key:"parse_map_Ks",value:function(e){this.currentMaterial.mapSpecular=this.parseMap(e)}},{key:"parse_map_Ke",value:function(e){this.currentMaterial.mapEmissive=this.parseMap(e)}},{key:"parse_map_Ns",value:function(e){this.currentMaterial.mapSpecularExponent=this.parseMap(e)}},{key:"parse_map_d",value:function(e){this.currentMaterial.mapDissolve=this.parseMap(e)}},{key:"parse_map_aat",value:function(e){this.currentMaterial.antiAliasing="on"==e[0]}},{key:"parse_map_bump",value:function(e){this.currentMaterial.mapBump=this.parseMap(e)}},{key:"parse_bump",value:function(e){this.parse_map_bump(e)}},{key:"parse_disp",value:function(e){this.currentMaterial.mapDisplacement=this.parseMap(e)}},{key:"parse_decal",value:function(e){this.currentMaterial.mapDecal=this.parseMap(e)}},{key:"parse_refl",value:function(e){this.currentMaterial.mapReflections.push(this.parseMap(e))}},{key:"parse",value:function(){var e=this.data.split(/\r?\n/),t=!0,a=!1,n=void 0;try{for(var i,s=e[Symbol.iterator]();!(t=(i=s.next()).done);t=!0){var l=i.value;if((l=l.trim())&&!l.startsWith("#")){var o=l.split(/\s/),u=void 0,c=o,f=r(c);u=f[0],o=f.slice(1);var h=this["parse_"+u];h&&h.bind(this)(o)}}}catch(e){a=!0,n=e}finally{try{!t&&s.return&&s.return()}finally{if(a)throw n}}delete this.data,this.currentMaterial=null}}]),e}()},function(e,exports,t){e.exports=t(4)},function(e,exports,t){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.version=exports.deleteMeshBuffers=exports.initMeshBuffers=exports.downloadMeshes=exports.downloadModels=exports.Layout=exports.MaterialLibrary=exports.Material=exports.Mesh=void 0;var r=t(1),a=function(e){return e&&e.__esModule?e:{default:e}}(r),n=t(2),i=t(0),s=t(5);exports.Mesh=a.default,exports.Material=n.Material,exports.MaterialLibrary=n.MaterialLibrary,exports.Layout=i.Layout,exports.downloadModels=s.downloadModels,exports.downloadMeshes=s.downloadMeshes,exports.initMeshBuffers=s.initMeshBuffers,exports.deleteMeshBuffers=s.deleteMeshBuffers,exports.version="1.1.3"},function(e,exports,t){"use strict";function r(e,t){var r=["mapDiffuse","mapAmbient","mapSpecular","mapDissolve","mapBump","mapDisplacement","mapDecal","mapEmissive"];t.endsWith("/")||(t+="/");var a=[];for(var n in e.materials)if(e.materials.hasOwnProperty(n)){n=e.materials[n];var i=!0,s=!1,l=void 0;try{for(var o,u=r[Symbol.iterator]();!(i=(o=u.next()).done);i=!0){var c=o.value;(function(e){var r=n[e];if(!r)return"continue";var i=t+r.filename;a.push(fetch(i).then(function(e){if(!e.ok)throw new Error;return e.blob()}).then(function(e){var t=new Image;return t.src=URL.createObjectURL(e),r.texture=t,new Promise(function(e){return t.onload=e})}).catch(function(){}))})(c)}}catch(e){s=!0,l=e}finally{try{!i&&u.return&&u.return()}finally{if(s)throw l}}}return Promise.all(a)}function a(e){var t=[],a=!0,n=!1,i=void 0;try{for(var s,o=e[Symbol.iterator]();!(a=(s=o.next()).done);a=!0){var f=s.value;!function(e){var a=[];if(!e.obj)throw new Error('"obj" attribute of model object not set. The .obj file is required to be set in order to use downloadModels()');var n={};n.indicesPerMaterial=!!e.indicesPerMaterial,n.calcTangentsAndBitangents=!!e.calcTangentsAndBitangents;var i=e.name;if(!i){var s=e.obj.split("/");i=s[s.length-1].replace(".obj","")}if(a.push(Promise.resolve(i)),a.push(fetch(e.obj).then(function(e){return e.text()}).then(function(e){return new u.default(e,n)})),e.mtl){var l=e.mtl;"boolean"==typeof l&&(l=e.obj.replace(/\.obj$/,".mtl")),a.push(fetch(l).then(function(e){return e.text()}).then(function(t){var a=new c.MaterialLibrary(t);if(!1!==e.downloadMtlTextures){var n=e.mtlTextureRoot;return n||(n=l.substr(0,l.lastIndexOf("/"))),Promise.all([Promise.resolve(a),r(a,n)])}return Promise.all(Promise.resolve(a))}).then(function(e){return e[0]}))}t.push(Promise.all(a))}(f)}}catch(e){n=!0,i=e}finally{try{!a&&o.return&&o.return()}finally{if(n)throw i}}return Promise.all(t).then(function(e){var t={},r=!0,a=!1,n=void 0;try{for(var i,s=e[Symbol.iterator]();!(r=(i=s.next()).done);r=!0){var o=i.value,u=l(o,3),c=u[0],f=u[1],h=u[2];f.name=c,h&&f.addMaterialLibrary(h),t[c]=f}}catch(e){a=!0,n=e}finally{try{!r&&s.return&&s.return()}finally{if(a)throw n}}return t})}function n(e,t,r){void 0===r&&(r={});var a=[];for(var n in e){(function(t){if(!e.hasOwnProperty(t))return"continue";var r=e[t];a.push(fetch(r).then(function(e){return e.text()}).then(function(e){return[t,new u.default(e)]}))})(n)}Promise.all(a).then(function(e){var a=!0,n=!1,i=void 0;try{for(var s,o=e[Symbol.iterator]();!(a=(s=o.next()).done);a=!0){var u=s.value,c=l(u,2),f=c[0],h=c[1];r[f]=h}}catch(e){n=!0,i=e}finally{try{!a&&o.return&&o.return()}finally{if(n)throw i}}return t(r)})}function i(e,t){t.normalBuffer=f(e,e.ARRAY_BUFFER,t.vertexNormals,3),t.textureBuffer=f(e,e.ARRAY_BUFFER,t.textures,t.textureStride),t.vertexBuffer=f(e,e.ARRAY_BUFFER,t.vertices,3),t.indexBuffer=f(e,e.ELEMENT_ARRAY_BUFFER,t.indices,1)}function s(e,t){e.deleteBuffer(t.normalBuffer),e.deleteBuffer(t.textureBuffer),e.deleteBuffer(t.vertexBuffer),e.deleteBuffer(t.indexBuffer)}Object.defineProperty(exports,"__esModule",{value:!0});var l=function(){function e(e,t){var r=[],a=!0,n=!1,i=void 0;try{for(var s,l=e[Symbol.iterator]();!(a=(s=l.next()).done)&&(r.push(s.value),!t||r.length!==t);a=!0);}catch(e){n=!0,i=e}finally{try{!a&&l.return&&l.return()}finally{if(n)throw i}}return r}return function(t,r){if(Array.isArray(t))return t;if(Symbol.iterator in Object(t))return e(t,r);throw new TypeError("Invalid attempt to destructure non-iterable instance")}}();exports.downloadModels=a,exports.downloadMeshes=n,exports.initMeshBuffers=i,exports.deleteMeshBuffers=s;var o=t(1),u=function(e){return e&&e.__esModule?e:{default:e}}(o),c=t(2),f=(t(0),function(e,t,r,a){var n=e.createBuffer(),i=t===e.ARRAY_BUFFER?Float32Array:Uint16Array;return e.bindBuffer(t,n),e.bufferData(t,new i(r),e.STATIC_DRAW),n.itemSize=a,n.numItems=r.length/a,n})}])});
 
 /***/ }),
-/* 76 */
+/* 77 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__Building__ = __webpack_require__(78);
+
 
 class BuildingSystem {
-    constructor(roadWidth, rs) {
+    constructor(roadWidth, rs, gridWidth, gridHeight) {
         this.grid = new Array();
         this.positions = new Array();
+        this.buildings = new Array();
         this.roadWidth = roadWidth;
         this.roadsystem = rs;
         this.grid = this.roadsystem.buildRasterizedGrid(this.roadWidth);
+        this.gridWidth = gridWidth;
+        this.gridHeight = gridHeight;
     }
     placeBuildings() {
-        for (let i = 0; i < this.roadsystem.width; i++) {
-            for (let j = 0; j < this.roadsystem.height; i++) {
-                if (this.grid[i + this.roadsystem.width * j] == 1) {
-                    this.positions.push(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec2 */].fromValues(i, j));
-                }
+        // for (let i = 0; i < this.gridWidth; i++) {
+        //     for (let j = 0; j < this.gridHeight; j++) {
+        //         if (this.grid[i + this.gridWidth*j] == 1) {
+        //             this.positions.push(vec2.fromValues(i,j));
+        //         }
+        //     }
+        // }
+        let numBuildings = 500;
+        for (let i = 0; i < numBuildings; i++) {
+            //generate a valid random pos
+            //get population density from road system. /255
+            //if math.random < this, place building
+            let posX = Math.floor((Math.random()) * this.gridWidth);
+            let posY = Math.floor((Math.random()) * this.gridHeight);
+            let density = this.roadsystem.densityValue(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["e" /* vec3 */].fromValues(2.0 * (posX / this.gridWidth) - 1.0, 2.0 * (posY / this.gridHeight) - 1.0, 0.0));
+            density /= 255;
+            console.log(density);
+            //console.log("X: " + posX + ", " + posY);
+            if (Math.random() < Math.pow(density, 4.0) && this.grid[posX + this.gridWidth * posY] == 1) {
+                this.buildings.push(new __WEBPACK_IMPORTED_MODULE_1__Building__["a" /* default */](Math.floor(Math.pow(density, 2.0) * 4.0), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec2 */].fromValues(posX, posY)));
+                //this.positions.push(vec2.fromValues(posX,posY));
             }
         }
-        return this.positions;
+        //return this.positions;
     }
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = BuildingSystem;
@@ -17965,40 +18258,100 @@ class BuildingSystem {
 
 
 /***/ }),
-/* 77 */
-/***/ (function(module, exports) {
-
-module.exports = "#version 300 es\n\nuniform mat4 u_ViewProj;\nuniform float u_Time;\nuniform mat4 u_Model;\n\nuniform mat3 u_CameraAxes; // Used for rendering particles as billboards (quads that are always looking at the camera)\n// gl_Position = center + vs_Pos.x * camRight + vs_Pos.y * camUp;\n\nin vec4 vs_Pos; // Non-instanced; each particle is the same quad drawn in a different place\nin vec4 vs_Nor; // Non-instanced, and presently unused\nin vec4 vs_Col; // An instanced rendering attribute; each particle instance has a different color\nin vec3 vs_Translate; // Another instance rendering attribute used to position each quad instance in the scene\nin vec2 vs_UV; // Non-instanced, and presently unused in main(). Feel free to use it for your meshes.\nin vec3 vs_R1;\nin vec3 vs_R2;\nin vec3 vs_R3;\nin vec3 vs_Scale;\n\nout vec4 fs_Col;\nout vec4 fs_Pos;\n\nvoid main()\n{\n    fs_Col = vs_Col;\n    fs_Pos = vs_Pos;\n\n    mat3 translate = mat3(vec3(1.0, 0.0, 0.0),\n                          vec3(0.0, 1.0, 0.0),\n                          vec3(vs_Translate.x, vs_Translate.y, 1.0));\n    \n    mat3 rotate = (mat3(vs_R1,\n                  vs_R2,\n                  vs_R3));\n    mat3 scale = mat3(vec3(vs_Scale.x, 0.0, 0.0),\n                            vec3(0.0, vs_Scale.y, 0.0),\n                            vec3(0.0, 0.0, 1.0));\n    mat3 offset = mat3(vec3(1.0, 0.0, 0.0),\n                          vec3(0.0, 1.0, 0.0),\n                          vec3(0.0, 0.5, 1.0));\n    mat3 neg_offset = mat3(vec3(1.0, 0.0, 0.0),\n                          vec3(0.0, 1.0, 0.0),\n                          vec3(0.0, 0.5, 1.0));\n    vec3 pos = translate * rotate * scale * vec3(vs_Pos.xy, 1.0);\n    gl_Position = u_ViewProj * vec4(vec3(4.0 * pos.x, 4.0 * (pos.z - 0.97), 4.0 * pos.y), 1.0);\n}\n"
-
-/***/ }),
 /* 78 */
-/***/ (function(module, exports) {
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-module.exports = "#version 300 es\nprecision highp float;\n\nin vec4 fs_Col;\nin vec4 fs_Pos;\n\nout vec4 out_Col;\n\nvoid main()\n{\n    //float dist = 1.0 - (length(fs_Pos.xyz) * 2.0);\n    out_Col = fs_Col;\n}\n"
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(0);
+
+
+class Building {
+    constructor(height, startPos) {
+        this.positions = new Array();
+        this.shapes = new Array();
+        this.height = height;
+        this.startPos = startPos;
+        this.shapes.push(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["e" /* vec3 */].fromValues(this.startPos[0], this.startPos[1], Math.floor(Math.random() * 2.0)));
+        this.generatePositions();
+    }
+    generatePositions() {
+        for (let y = Math.ceil(this.height); y >= 0; y--) {
+            //console.log(y);
+            for (let i = 0; i < this.shapes.length; i++) {
+                this.positions.push(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["f" /* vec4 */].fromValues(this.shapes[i][0], y, this.shapes[i][1], this.shapes[i][2]));
+            }
+            //decide to add something
+            if (Math.random() < 0.5) {
+                let pos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec2 */].fromValues(12.0 * (Math.random() * 2.0 - 1.0) + 0.1, 12.0 * (Math.random() * 2.0 - 1.0) + 0.1);
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec2 */].add(pos, this.startPos, pos);
+                this.shapes.push(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["e" /* vec3 */].fromValues(pos[0], pos[1], Math.floor(Math.random() * 2.0)));
+            }
+        }
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Building;
+
+
 
 /***/ }),
 /* 79 */
 /***/ (function(module, exports) {
 
-module.exports = "#version 300 es\nprecision highp float;\n\n// The vertex shader used to render the background of the scene\n\nin vec4 vs_Pos;\nin vec3 vs_Scale;\nuniform vec2 u_PlanePos;\nuniform mat4 u_ViewProj;\nuniform vec4 u_MapState;\nuniform sampler2D u_Texture;\nout vec2 fs_Pos;\n\nfloat rand(vec2 co){\n    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);\n}\n\nfloat interpNoise2D(float x, float y) {\n  float intX = floor(x);\n  float fractX = fract(x);\n  float intY = floor(y);\n  float fractY = fract(y);\n\n  float v1 = rand(vec2(intX, intY));\n  float v2 = rand(vec2(intX + 1.0, intY));\n  float v3 = rand(vec2(intX, intY + 1.0));\n  float v4 = rand(vec2(intX + 1.0, intY + 1.0));\n\n  float i1 = mix(v1, v2, fractX);\n  float i2 = mix(v3, v4, fractX);\n\n  return mix(i1, i2, fractY);\n}\n\nfloat fbm(float x, float y) {\n  float roughness = 1.0;\n  float total = 0.0;\n  float persistence = 0.7;\n  int octaves = 2;\n\n  for (int i = 0; i < 8; i++) {\n    float freq = pow(2.0, float(i));\n    float amp = pow(persistence, float(i));\n\n    total += interpNoise2D(x * freq, y * freq) * amp * roughness;\n    roughness *= interpNoise2D(x*freq, y*freq);\n  }\n  return total;\n}\n\nfloat step_map(float value) {\n\nif (value < 0.2f) {\n    return 0.2f;\n  } else if (value < 0.4f) {\n    return 0.2f + ((value - 0.2f) / 0.2f)*0.2f;\n  } else if (value < 0.6f) {\n    return 0.4f + ((value - 0.4f) / 0.2f)*0.2f;\n  } else if (value < 0.8f) {\n    return 0.6f + ((value - 0.6f) / 0.2f)*0.2f;\n  } else {\n    return 1.f;\n  }\n  \n}\n\nvec2 random3( vec2 p ) {\n    return fract(sin(vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))))*43758.5453);\n}\n\nfloat worley (float c_size, float multiplier, vec2 pos) {\n  float cell_size = c_size;\n  vec2 cell = pos.xy / cell_size;\n  float noise = 0.f;\n  \n  //get the cell pixel position is in\n  vec2 fract_pos = fract(cell);\n  vec2 int_pos = floor(cell);\n\n  float m_dist = 1.f;\n\n  //compare pos to the randpoints in the neighboring cells and save the smallest dist\n  for (int y= -1; y <= 1; y++) {\n    for (int x= -1; x <= 1; x++) {\n      // Neighbor place in the grid\n      vec2 neighbor = vec2(float(x),float(y));\n      vec2 randpt = random3(int_pos + neighbor);\n\n      vec2 diff = neighbor + randpt - fract_pos;\n      float dist = length(diff);\n      float rough = 1.0;\n      \n      // Keep the closer distance\n      if (dist < m_dist) {\n        m_dist = dist;\n        vec2 pt = (randpt + int_pos + neighbor) / cell_size;\n        noise = m_dist*multiplier;\n      }\n    } \n  }\n  return noise;\n}\n\nvoid main() {\n  fs_Pos = vs_Pos.xz;\n\n  vec2 pos = fs_Pos * 2.0;\n  float height = fbm(pos.x, pos.y);\n  height = log(height + 0.7);\n\n  float offset = 0.f;\n  if (height < 0.2) {\n    offset = 0.f;\n  } else if (height < 0.3) {\n    offset = mix(0.1, 0.0, (0.3 - height) / 0.3);\n  } else {\n    offset = 0.1;\n  }\n\n\n  vec2 uv = vec2(0.5 * (fs_Pos.x + 4.0) / 4.0, 0.5 * (fs_Pos.y + 4.0) / 4.0);\n  vec4 diffuseColor = texture(u_Texture, uv);\n  vec4 modelposition = vs_Pos;\n   modelposition = modelposition + vec4(0.0,offset,0.0,0.0); \n    gl_Position = u_ViewProj * vec4(vec3(modelposition), 1.0);\n}"
+module.exports = "#version 300 es\n\nuniform mat4 u_ViewProj;\nuniform float u_Time;\nuniform mat4 u_Model;\n\nuniform mat3 u_CameraAxes; // Used for rendering particles as billboards (quads that are always looking at the camera)\n// gl_Position = center + vs_Pos.x * camRight + vs_Pos.y * camUp;\n\nin vec4 vs_Pos; // Non-instanced; each particle is the same quad drawn in a different place\nin vec4 vs_Nor; // Non-instanced, and presently unused\nin vec4 vs_Col; // An instanced rendering attribute; each particle instance has a different color\nin vec3 vs_Translate; // Another instance rendering attribute used to position each quad instance in the scene\nin vec2 vs_UV; // Non-instanced, and presently unused in main(). Feel free to use it for your meshes.\nin vec3 vs_R1;\nin vec3 vs_R2;\nin vec3 vs_R3;\nin vec3 vs_Scale;\n\nout vec4 fs_Col;\nout vec4 fs_Pos;\n\nvoid main()\n{\n    fs_Col = vs_Col;\n    fs_Pos = vs_Pos;\n\n    mat3 translate = mat3(vec3(1.0, 0.0, 0.0),\n                          vec3(0.0, 1.0, 0.0),\n                          vec3(vs_Translate.x, vs_Translate.y, 1.0));\n    \n    mat3 rotate = (mat3(vs_R1,\n                  vs_R2,\n                  vs_R3));\n    mat3 scale = mat3(vec3(vs_Scale.x, 0.0, 0.0),\n                            vec3(0.0, vs_Scale.y, 0.0),\n                            vec3(0.0, 0.0, 1.0));\n\n    vec3 pos = translate * rotate * scale * vec3(vs_Pos.xy, 1.0);\n    gl_Position = u_ViewProj * vec4(vec3(4.0 * pos.x, 4.0 * (pos.z - 0.97), 4.0 * pos.y), 1.0);\n}\n"
 
 /***/ }),
 /* 80 */
 /***/ (function(module, exports) {
 
-module.exports = "#version 300 es\nprecision highp float;\n\nuniform vec3 u_Eye, u_Ref, u_Up;\nuniform vec2 u_Dimensions;\nuniform float u_Time;\nuniform sampler2D u_Texture; // The texture to be read from by this shader\nuniform vec4 u_MapState;\n\nin vec2 fs_Pos;\nout vec4 out_Col;\n\nvoid main() {\n  vec2 uv = vec2(0.5 * (fs_Pos.x + 4.0) / 4.0, 0.5 * (fs_Pos.y + 4.0) / 4.0);\n  vec4 diffuseColor = texture(u_Texture, uv);\n  if (u_MapState.w == 1.0) {\n    if (diffuseColor.g > diffuseColor.b) {\n      out_Col = vec4(0.0, 1.0, 0.0, 1.0);\n    } else {\n      out_Col = vec4(0.0, 0.0, 1.0, 1.0);\n    }\n  } else if (u_MapState.z == 1.0) {\n    //render both!\n    vec3 outpt = mix(vec3(diffuseColor), vec3(diffuseColor.w), 0.6);\n    out_Col = vec4(outpt, 1.0);\n  } else if (u_MapState.z == -1.0) {\n    out_Col = vec4(vec3(diffuseColor), 1.0);\n  }\n  else {\n    if (u_MapState.x == 1.0) {\n      //render height only\n      out_Col = vec4(vec3(diffuseColor), 1.0);\n    } else {\n      //render density only\n      out_Col = vec4(vec3(diffuseColor.w), 1.0);\n    }\n  }\n  //out_Col = vec4(1.0,0.0,0.0,1.0);\n}\n"
+module.exports = "#version 300 es\nprecision highp float;\n\nin vec4 fs_Col;\nin vec4 fs_Pos;\n\nout vec4 out_Col;\n\nvoid main()\n{\n    //float dist = 1.0 - (length(fs_Pos.xyz) * 2.0);\n    out_Col = vec4(252.0 * 0.9 / 255.0, 168.0 * 0.9 / 255.0, 0.0 * 0.9 / 255.0, 1.0);//fs_Col;\n}\n"
 
 /***/ }),
 /* 81 */
 /***/ (function(module, exports) {
 
-module.exports = "#version 300 es\nprecision highp float;\n\n// The vertex shader used to render the background of the scene\n\nin vec4 vs_Pos;\nin vec3 vs_Scale;\nout vec2 fs_Pos;\n\nvoid main() {\n  fs_Pos = vs_Pos.xy;\n  gl_Position = vs_Pos;\n}\n\n"
+module.exports = "#version 300 es\n\nuniform mat4 u_ViewProj;\nuniform float u_Time;\nuniform mat4 u_Model;\n\nuniform mat3 u_CameraAxes; // Used for rendering particles as billboards (quads that are always looking at the camera)\n// gl_Position = center + vs_Pos.x * camRight + vs_Pos.y * camUp;\n\nin vec4 vs_Pos; // Non-instanced; each particle is the same quad drawn in a different place\nin vec4 vs_Nor; // Non-instanced, and presently unused\nin vec4 vs_Col; // An instanced rendering attribute; each particle instance has a different color\nin vec3 vs_Translate; // Another instance rendering attribute used to position each quad instance in the scene\nin vec2 vs_UV; // Non-instanced, and presently unused in main(). Feel free to use it for your meshes.\nin vec3 vs_R1;\nin vec3 vs_R2;\nin vec3 vs_R3;\nin vec3 vs_Scale;\n\nout vec4 fs_Col;\nout vec4 fs_Pos;\nout vec4 fs_Nor;\n\nvoid main()\n{\n    fs_Col = vs_Col;\n    fs_Pos = vs_Pos;\n    fs_Nor = vs_Nor;\n\n    vec3 pos = 0.01 * vs_Pos.xyz + vs_Translate;\n    gl_Position = u_ViewProj * vec4(4.0 * pos.x, 4.0* (pos.y + 0.03), 4.0 * pos.z, 1.0);\n}\n"
 
 /***/ }),
 /* 82 */
 /***/ (function(module, exports) {
 
+module.exports = "#version 300 es\nprecision highp float;\n\nuniform float u_Time;\nuniform sampler2D u_Texture;\n\nin vec4 fs_Col;\nin vec4 fs_Pos;\nin vec4 fs_Nor;\n\nout vec4 out_Col;\n\nfloat random(vec2 ab) \n{\n\tfloat f = (cos(dot(ab ,vec2(21.9898,78.233))) * 43758.5453);\n\treturn fract(f);\n}\n\nfloat noise(in vec2 xy) \n{\n\tvec2 ij = floor(xy);\n\tvec2 uv = xy-ij;\n\tuv = uv*uv*(3.0-2.0*uv);\n\t\n\n\tfloat a = random(vec2(ij.x, ij.y ));\n\tfloat b = random(vec2(ij.x+1., ij.y));\n\tfloat c = random(vec2(ij.x, ij.y+1.));\n\tfloat d = random(vec2(ij.x+1., ij.y+1.));\n\tfloat k0 = a;\n\tfloat k1 = b-a;\n\tfloat k2 = c-a;\n\tfloat k3 = a-b-c+d;\n\treturn (k0 + k1*uv.x + k2*uv.y + k3*uv.x*uv.y);\n}\n\nvec3 random3( vec3 p ) {\n    return fract(sin(vec3(dot(p,vec3(127.1, 311.7, 191.999)),\n                          dot(p,vec3(269.5, 183.3, 765.54)),\n                          dot(p, vec3(420.69, 631.2,109.21))))\n                 *43758.5453);\n}\n\nfloat WorleyNoise3D(vec3 p)\n{\n    // Tile the space\n    vec3 pointInt = floor(p);\n    vec3 pointFract = fract(p);\n\n    float minDist = 1.0; // Minimum distance initialized to max.\n\n    // Search all neighboring cells and this cell for their point\n    for(int z = -1; z <= 1; z++)\n    {\n        for(int y = -1; y <= 1; y++)\n        {\n            for(int x = -1; x <= 1; x++)\n            {\n                vec3 neighbor = vec3(float(x), float(y), float(z));\n\n                // Random point inside current neighboring cell\n                vec3 point = random3(pointInt + neighbor);\n\n                // Animate the point\n                point = 0.5 + 0.5 * sin(u_Time * 0.01 + 6.2831 * point); // 0 to 1 range\n\n                // Compute the distance b/t the point and the fragment\n                // Store the min dist thus far\n                vec3 diff = neighbor + point - pointFract;\n                float dist = length(diff);\n                minDist = min(minDist, dist);\n            }\n        }\n    }\n    return minDist;\n}\n\nvoid main()\n{\n    vec2 uv = vec2(0.5 * (fs_Pos.x + 4.0) / 4.0, 0.5 * (fs_Pos.y + 4.0) / 4.0);\n    float density = vec4(texture(u_Texture, uv)).w;\n\n    // Material base color (before shading)\n    vec4 diffuseColor = vec4(1.0, 0.0, 0.5, 1.0);//texture(u_Texture, fs_UV);\n\n    vec3 lightColor = vec3(145.0 / 255.0, 137.0 / 255.0, 129.0 / 255.0);\n    vec3 darkColor = vec3(79.0 / 255.0, 76.0 / 255.0, 72.0 / 255.0);\n\n    diffuseColor = vec4(mix(lightColor, darkColor, pow(fs_Pos.y, 1.0)), 1.0);\n\n    //stars\n    float r1 = WorleyNoise3D(fs_Pos.xyz*vec3(sin(u_Time*0.1 + 3.14159 * (fs_Pos.x + fs_Pos.y + fs_Pos.z) )));\n\tfloat r2 = WorleyNoise3D(fs_Pos.yzx*vec3(cos(u_Time*0.1 + 3.14159 * (fs_Pos.x + fs_Pos.y + fs_Pos.z) ), sin(u_Time*0.1 + 3.14159 * (fs_Pos.x + fs_Pos.y + fs_Pos.z) ), 1.0));\n\tfloat r3 = WorleyNoise3D(fs_Pos.zyx*vec3(sin(u_Time*0.5 + 3.14159 * (fs_Pos.x + fs_Pos.y + fs_Pos.z) ), cos(u_Time*0.5 + 3.14159 * (fs_Pos.x + fs_Pos.y + fs_Pos.z) ), 1.0));\n\n    float color = pow(noise(fs_Pos.xy + 0.2), 30.0) * 20.0;\n    vec3 intensity = vec3(1.0,1.0,1.0);//vec3(mix(0.7,1.0,fs_Pos.x*2.0 - 1.0));\n\tdiffuseColor += vec4(vec3(color*r1, color*r2, color*r3)*intensity*vec3(255.0/255.0, 183.0/255.0, 43.0/255.0), 1.0); //255, 209, 119\n\n\n    vec4 fs_LightVec = vec4(50.0, 50.0, -30.0, 1.0);\n\n    vec4 fs_LightVec2 = vec4(0.0, -20.0, 50.0, 1.0);\n    vec4 lightColor2 = vec4(171.0 * 0.5 / 255.0, 156.0 * 0.5 / 255.0, 216.0 * 0.5/ 255.0, 1.0); \n\n    if (dot(normalize(fs_Nor), normalize(fs_LightVec)) < 0.0) {\n        lightColor2 = vec4(87.0 * 0.5 / 255.0, 57.0 * 0.5 / 255.0, 178.0 * 0.5 / 255.0, 1.0); //87, 57, 178\n    }\n    // Calculate the diffuse term for Lambert shading\n    float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));\n    diffuseTerm = clamp(diffuseTerm, 0.0, 1.0);\n\n    float ambientTerm = 0.2;\n\n    float lightIntensity = diffuseTerm + ambientTerm;\n\n    diffuseTerm += 0.9 * dot(normalize(fs_Nor), normalize(fs_LightVec2));\n    diffuseTerm = clamp(diffuseTerm, 0.0, 1.0);\n\n    lightIntensity += diffuseTerm + ambientTerm;\n\n    // Avoid negative lighting values\n    \n\n       //Add a small float value to the color multiplier\n                                                        //to simulate ambient lighting. This ensures that faces that are not\n                                                        //lit by our point light are not completely black.\n\n    // Compute final shaded color\n    out_Col = vec4(diffuseColor.rgb * lightIntensity * lightColor2.rgb, 1.0);\n}\n"
+
+/***/ }),
+/* 83 */
+/***/ (function(module, exports) {
+
+module.exports = "#version 300 es\nprecision highp float;\n\n// The vertex shader used to render the background of the scene\n\nin vec4 vs_Pos;\nin vec3 vs_Scale;\nuniform vec2 u_PlanePos;\nuniform mat4 u_ViewProj;\nuniform vec4 u_MapState;\nuniform sampler2D u_Texture;\nout vec2 fs_Pos;\n\nfloat rand(vec2 co){\n    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);\n}\n\nfloat interpNoise2D(float x, float y) {\n  float intX = floor(x);\n  float fractX = fract(x);\n  float intY = floor(y);\n  float fractY = fract(y);\n\n  float v1 = rand(vec2(intX, intY));\n  float v2 = rand(vec2(intX + 1.0, intY));\n  float v3 = rand(vec2(intX, intY + 1.0));\n  float v4 = rand(vec2(intX + 1.0, intY + 1.0));\n\n  float i1 = mix(v1, v2, fractX);\n  float i2 = mix(v3, v4, fractX);\n\n  return mix(i1, i2, fractY);\n}\n\nfloat fbm(float x, float y) {\n  float roughness = 1.0;\n  float total = 0.0;\n  float persistence = 0.7;\n  int octaves = 2;\n\n  for (int i = 0; i < 8; i++) {\n    float freq = pow(2.0, float(i));\n    float amp = pow(persistence, float(i));\n\n    total += interpNoise2D(x * freq, y * freq) * amp * roughness;\n    roughness *= interpNoise2D(x*freq, y*freq);\n  }\n  return total;\n}\n\nfloat step_map(float value) {\n\nif (value < 0.2f) {\n    return 0.2f;\n  } else if (value < 0.4f) {\n    return 0.2f + ((value - 0.2f) / 0.2f)*0.2f;\n  } else if (value < 0.6f) {\n    return 0.4f + ((value - 0.4f) / 0.2f)*0.2f;\n  } else if (value < 0.8f) {\n    return 0.6f + ((value - 0.6f) / 0.2f)*0.2f;\n  } else {\n    return 1.f;\n  }\n  \n}\n\nvec2 random3( vec2 p ) {\n    return fract(sin(vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))))*43758.5453);\n}\n\nfloat worley (float c_size, float multiplier, vec2 pos) {\n  float cell_size = c_size;\n  vec2 cell = pos.xy / cell_size;\n  float noise = 0.f;\n  \n  //get the cell pixel position is in\n  vec2 fract_pos = fract(cell);\n  vec2 int_pos = floor(cell);\n\n  float m_dist = 1.f;\n\n  //compare pos to the randpoints in the neighboring cells and save the smallest dist\n  for (int y= -1; y <= 1; y++) {\n    for (int x= -1; x <= 1; x++) {\n      // Neighbor place in the grid\n      vec2 neighbor = vec2(float(x),float(y));\n      vec2 randpt = random3(int_pos + neighbor);\n\n      vec2 diff = neighbor + randpt - fract_pos;\n      float dist = length(diff);\n      float rough = 1.0;\n      \n      // Keep the closer distance\n      if (dist < m_dist) {\n        m_dist = dist;\n        vec2 pt = (randpt + int_pos + neighbor) / cell_size;\n        noise = m_dist*multiplier;\n      }\n    } \n  }\n  return noise;\n}\n\nvoid main() {\n  fs_Pos = vs_Pos.xz;\n\n  vec2 pos = fs_Pos * 2.0;\n  float height = fbm(pos.x, pos.y);\n  height = log(height + 0.7);\n\n  float offset = 0.f;\n  if (height < 0.2) {\n    offset = 0.f;\n  } else if (height < 0.3) {\n    offset = mix(0.1, 0.0, (0.3 - height) / 0.3);\n  } else {\n    offset = 0.1;\n  }\n\n\n  vec2 uv = vec2(0.5 * (fs_Pos.x + 4.0) / 4.0, 0.5 * (fs_Pos.y + 4.0) / 4.0);\n  vec4 diffuseColor = texture(u_Texture, uv);\n  vec4 modelposition = vs_Pos;\n   modelposition = modelposition + vec4(0.0,offset,0.0,0.0); \n    gl_Position = u_ViewProj * vec4(vec3(modelposition), 1.0);\n}"
+
+/***/ }),
+/* 84 */
+/***/ (function(module, exports) {
+
+module.exports = "#version 300 es\nprecision highp float;\n\nuniform vec3 u_Eye, u_Ref, u_Up;\nuniform vec2 u_Dimensions;\nuniform float u_Time;\nuniform sampler2D u_Texture; // The texture to be read from by this shader\nuniform vec4 u_MapState;\n\nin vec2 fs_Pos;\nout vec4 out_Col;\n\nvoid main() {\n  vec4 lightColor2 = vec4(28.0 * 2.0 / 255.0, 12.0 * 2.0 / 255.0, 79.0 * 2.0 / 255.0, 1.0); //11, 3, 38\n  vec2 uv = vec2(0.5 * (fs_Pos.x + 4.0) / 4.0, 0.5 * (fs_Pos.y + 4.0) / 4.0);\n  vec4 diffuseColor = texture(u_Texture, uv);\n  if (u_MapState.w == 1.0) {\n    if (diffuseColor.g > diffuseColor.b) {\n      out_Col = vec4(0.0, 0.5, 0.0, 1.0) * lightColor2;\n    } else {\n      out_Col = vec4(0.0, 0.0, 0.5, 1.0) * lightColor2;\n    }\n  } else if (u_MapState.z == 1.0) {\n    //render both!\n    vec3 outpt = mix(vec3(diffuseColor), vec3(diffuseColor.w), 0.6);\n    out_Col = vec4(outpt, 1.0) * lightColor2;\n  } else if (u_MapState.z == -1.0) {\n    out_Col = vec4(vec3(0.5*diffuseColor), 1.0) * lightColor2;\n  }\n  else {\n    if (u_MapState.x == 1.0) {\n      //render height only\n      out_Col = vec4(vec3(0.5*diffuseColor), 1.0) * lightColor2;\n    } else {\n      //render density only\n      out_Col = vec4(vec3(0.5*diffuseColor.w), 1.0) * lightColor2;\n    }\n  }\n  //out_Col = vec4(1.0,0.0,0.0,1.0);\n}\n"
+
+/***/ }),
+/* 85 */
+/***/ (function(module, exports) {
+
+module.exports = "#version 300 es\nprecision highp float;\n\n// The vertex shader used to render the background of the scene\n\nin vec4 vs_Pos;\nin vec3 vs_Scale;\nout vec2 fs_Pos;\n\nvoid main() {\n  fs_Pos = vs_Pos.xy;\n  gl_Position = vs_Pos;\n}\n\n"
+
+/***/ }),
+/* 86 */
+/***/ (function(module, exports) {
+
 module.exports = "#version 300 es\nprecision highp float;\n\nuniform vec3 u_Eye, u_Ref, u_Up;\nuniform vec2 u_Dimensions;\nuniform float u_Time;\nuniform vec4 u_MapState;\n\nin vec2 fs_Pos;\nout vec4 out_Col;\n\nfloat rand(vec2 co){\n    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);\n}\n\nfloat interpNoise2D(float x, float y) {\n  float intX = floor(x);\n  float fractX = fract(x);\n  float intY = floor(y);\n  float fractY = fract(y);\n\n  float v1 = rand(vec2(intX, intY));\n  float v2 = rand(vec2(intX + 1.0, intY));\n  float v3 = rand(vec2(intX, intY + 1.0));\n  float v4 = rand(vec2(intX + 1.0, intY + 1.0));\n\n  float i1 = mix(v1, v2, fractX);\n  float i2 = mix(v3, v4, fractX);\n\n  return mix(i1, i2, fractY);\n}\n\nfloat fbm(float x, float y) {\n  float roughness = 1.0;\n  float total = 0.0;\n  float persistence = 0.7;\n  int octaves = 2;\n\n  for (int i = 0; i < 8; i++) {\n    float freq = pow(2.0, float(i));\n    float amp = pow(persistence, float(i));\n\n    total += interpNoise2D(x * freq, y * freq) * amp * roughness;\n    roughness *= interpNoise2D(x*freq, y*freq);\n  }\n  return total;\n}\n\nfloat step_map(float value) {\n\nif (value < 0.2f) {\n    return 0.2f;\n  } else if (value < 0.4f) {\n    return 0.2f + ((value - 0.2f) / 0.2f)*0.2f;\n  } else if (value < 0.6f) {\n    return 0.4f + ((value - 0.4f) / 0.2f)*0.2f;\n  } else if (value < 0.8f) {\n    return 0.6f + ((value - 0.6f) / 0.2f)*0.2f;\n  } else {\n    return 1.f;\n  }\n  \n}\n\nvec2 random3( vec2 p ) {\n    return fract(sin(vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))))*43758.5453);\n}\n\nfloat worley (float c_size, float multiplier, vec2 pos) {\n  float cell_size = c_size;\n  vec2 cell = pos.xy / cell_size;\n  float noise = 0.f;\n  \n  //get the cell pixel position is in\n  vec2 fract_pos = fract(cell);\n  vec2 int_pos = floor(cell);\n\n  float m_dist = 1.f;\n\n  //compare pos to the randpoints in the neighboring cells and save the smallest dist\n  for (int y= -1; y <= 1; y++) {\n    for (int x= -1; x <= 1; x++) {\n      // Neighbor place in the grid\n      vec2 neighbor = vec2(float(x),float(y));\n      vec2 randpt = random3(int_pos + neighbor);\n\n      vec2 diff = neighbor + randpt - fract_pos;\n      float dist = length(diff);\n      float rough = 1.0;\n      \n      // Keep the closer distance\n      if (dist < m_dist) {\n        m_dist = dist;\n        vec2 pt = (randpt + int_pos + neighbor) / cell_size;\n        noise = m_dist*multiplier;\n      }\n    } \n  }\n  return noise;\n}\n\nvoid main() {\n  vec2 pos = fs_Pos * 2.0;\n  float height = fbm(pos.x, pos.y);\n  float pop_dens = 0.f;\n  if (u_MapState.x == 0.f) {\n      pop_dens = 1.0 - (worley(0.5, 0.5, fs_Pos.xy) + 0.5*height);\n      pop_dens = fbm(pop_dens, pop_dens);\n  } else if (u_MapState.x == 0.5) {\n      pop_dens = 1.0 - worley(0.4, 1.5, vec2(fs_Pos.x - 19.f, fs_Pos.y));\n      pop_dens = fbm(pop_dens, pop_dens);\n      pop_dens = step_map(pop_dens);\n  } else {\n    pop_dens = fbm(pos.x * 1.5f - 20.f, pos.y * 2.5f - 5.f);\n    pop_dens = worley(0.5, 1.5, vec2(pop_dens, pop_dens));\n    pop_dens = pow(pop_dens, 0.5);\n  }\n\n  height = log(height + 0.7);\n\n  float height_control = 0.0;\n\n  if (u_MapState.y == 0.0) {\n    height_control = 0.1;\n  } else if (u_MapState.y == 1.0) {\n    height_control = 0.2;\n  } else {\n    height_control = 0.3;\n  }\n\n  if (height < height_control) {\n    pop_dens = 0.0;\n    out_Col = vec4(0.0,0.0,0.5, pop_dens);\n  } else if (height < height_control + 0.1) {\n    pop_dens = 0.0;\n    vec3 col = mix(vec3(0.0,0.0,0.5), vec3(0.0,height,0.0), 0.2);\n    out_Col = vec4(col, pop_dens);\n  } else {\n    out_Col = vec4(0.0, height + 0.1, 0.0, pop_dens);\n    //out_Col = vec4(pop_dens, pop_dens, pop_dens, pop_dens);\n  }\n  \n}\n"
+
+/***/ }),
+/* 87 */
+/***/ (function(module, exports) {
+
+module.exports = "#version 300 es\nprecision highp float;\n\n// The vertex shader used to render the background of the scene\n\nin vec4 vs_Pos;\nin vec3 vs_Scale;\nout vec2 fs_Pos;\n\nvoid main() {\n  fs_Pos = vs_Pos.xy;\n  gl_Position = vs_Pos;\n}\n\n"
+
+/***/ }),
+/* 88 */
+/***/ (function(module, exports) {
+
+module.exports = "#version 300 es\nprecision highp float;\n\nuniform float u_Time;\nuniform sampler2D u_Texture;\n\nin vec2 fs_Pos;\n\nout vec4 out_Col;\n\n#define FRAME\n#define STARS\n#define NOISE_HORIZON\n\nvec3 SUN = normalize(vec3(-0.8, -1.0, 0.0));\nvec3 MOON = normalize(vec3(-0.4, 0.4, 0.3));\n\n//Code Adapted from https://www.shadertoy.com/view/MdBGRh. It's really cool!\n\n\n\nfloat snoise(vec3 v);\n\nfloat clouds(vec3 p) {\n\tvec3 q = p + vec3(-0.1, sin(p.y)*0.25, 1.0)*(0.01+u_Time);\n\tfloat v = 0.0;\n\tv += 0.550 * snoise(q*0.051);\n\tv += 0.250 * snoise(q*0.111);\n\tv += 0.125 * snoise(q*0.211);\n\treturn v;\n}\n\nvoid main()\n{\t\n\tvec2 uv = fs_Pos.xy;\n\tvec2 pos = -1.0 + 2.0 * uv; //convert to screen space\n\t\n\t// setup the camera position to change the perspective of the clouds in the sky\n\tvec3 camTarget = vec3(-3.5, 4.0, 0.0);\n\t\n\tvec3 camPos = vec3(0.0, 1.0, -1.0);\t\n\tvec3 up = vec3(0, 1, 0);\n\t\n\tvec3 camDir = normalize((camTarget - camPos));\n\tvec3 camLeft = normalize(cross(up, camDir));\n\tvec3 camUp = cross(camDir, camLeft);\n\t\n\t//our ray position is how far along our ndc coord is along the\n\t//camera's axes\n\tvec3 rayPos = camPos + normalize(camDir + pos.x * camLeft + pos.y * camUp);\n\tvec3 rayDir = normalize(rayPos - camPos); //just like rayPos - u_Eye\n\t\n\tfloat t = (20.0 - rayPos.y) / rayDir.y;\t\t\n\t//base sky color\n\tvec3 col = vec3(87.0 * 0.2 / 255.0, 57.0 * 0.2 / 255.0, 178.0 * 0.2 / 255.0);\t\n\t\t\t\t\n\t\t// generate the cloud position based on our t value and where our rayDir\n\t\t// is in the scene\n\t\tfloat cloudA = (smoothstep(0.0, 1.0, 50.0/t)) * 0.25;\t\t\n\t\tfloat cloud = smoothstep(0.0, 0.8, 0.2+clouds(t * rayDir));\t\t\n\n\t\t//add the color of the cloud to our background color\n\t\tcol += vec3(cloudA * cloud);\n\t\t\t\t\t\t\n\t\t//apply noise to the face of the moon to get craters\n\t\tfloat ms = snoise(rayDir*20.0);\n\t\tvec3 mCol = vec3(0.3, 0.3, 0.3) - 0.1*ms*ms*ms;\n\n\t\t// add in the color of the moon based on its position and orientation\n\t\t// relative to our ray dir\n\t\tfloat cloudShade = 1.0 - smoothstep(0.2, 0.9 , cloud);\n\t\tfloat moonDot = dot(MOON, rayDir);\n\t\tfloat moonA = smoothstep(0.9985, 0.999, moonDot);\t\t\n\t\tcol += (moonA*cloudShade)*mCol;\n\t\tcol += vec3(0.15) * smoothstep(0.91, 0.9985, moonDot);\n\t\t\n\t\t//add blinking starts and blend with color of clouds\n\t\tfloat star = cloudShade*smoothstep(0.925, 0.955, snoise(floor(rayDir*202.0)));\n\t\tcol += clamp(star, 0.0, 1.0) * vec3(0.4);\n\n\t\tout_Col = vec4(col, 1.0);\t\n}\n\n\n\nvec3 mod289(vec3 x) {\n  return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\n\nvec4 mod289(vec4 x) {\n  return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\n\nvec4 permute(vec4 x) {\n     return mod289(((x*34.0)+1.0)*x);\n}\n\nvec4 taylorInvSqrt(vec4 r)\n{\n  return 1.79284291400159 - 0.85373472095314 * r;\n}\n\n//admittedly I don't understand everything in this function, but\n//I attempted to comment what I could understand because their\n//shader is super cool!\nfloat snoise(vec3 v)\n  { \n  const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;\n  const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);\n\n//map out a square with the input vector as the lower corner\n\n// First corner\n  vec3 i  = floor(v + dot(v, C.yyy) );\n  vec3 x0 =   v - i + dot(i, C.xxx) ;\n\n// Other corners\n  vec3 g = step(x0.yzx, x0.xyz);\n  vec3 l = 1.0 - g;\n  vec3 i1 = min( g.xyz, l.zxy );\n  vec3 i2 = max( g.xyz, l.zxy );\n\n  vec3 x1 = x0 - i1 + C.xxx;\n  vec3 x2 = x0 - i2 + C.yyy; // 2.0*C.x = 1/3 = C.y\n  vec3 x3 = x0 - D.yyy;      // -1.0+3.0*C.x = -0.5 = -D.y\n\n// Permutations\n  i = mod289(i); \n  vec4 p = permute( permute( permute( \n             i.z + vec4(0.0, i1.z, i2.z, 1.0 ))\n           + i.y + vec4(0.0, i1.y, i2.y, 1.0 )) \n           + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));\n\n// map these points on a square to a octahedron\n  float n_ = 0.142857142857; // 1.0/7.0\n  vec3  ns = n_ * D.wyz - D.xzx;\n\n  vec4 j = p - 49.0 * floor(p * ns.z * ns.z);  //  mod(p,7*7)\n\n  vec4 x_ = floor(j * ns.z);\n  vec4 y_ = floor(j - 7.0 * x_ );    // mod(j,N)\n\n  vec4 x = x_ *ns.x + ns.yyyy;\n  vec4 y = y_ *ns.x + ns.yyyy;\n  vec4 h = 1.0 - abs(x) - abs(y);\n\n  vec4 b0 = vec4( x.xy, y.xy );\n  vec4 b1 = vec4( x.zw, y.zw );\n\n  vec4 s0 = floor(b0)*2.0 + 1.0;\n  vec4 s1 = floor(b1)*2.0 + 1.0;\n  vec4 sh = -step(h, vec4(0.0));\n\n  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;\n  vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;\n\n  vec3 p0 = vec3(a0.xy,h.x);\n  vec3 p1 = vec3(a0.zw,h.y);\n  vec3 p2 = vec3(a1.xy,h.z);\n  vec3 p3 = vec3(a1.zw,h.w);\n\n//Normalize gradients between each of the mapped points p0-p3\n  vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));\n  p0 *= norm.x;\n  p1 *= norm.y;\n  p2 *= norm.z;\n  p3 *= norm.w;\n\n// Mix final noise value\n  vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);\n  m = m * m;\n  return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), \n                                dot(p2,x2), dot(p3,x3) ) );\n}\n\n"
 
 /***/ })
 /******/ ]);
